@@ -5,6 +5,7 @@ export const Constants = {
     // }
     "apis" : {
         "submit" : "http://localhost:8000/query/submit_question",
-        "generateResponse" : "http://localhost:8000/query/get_question_and_facts"
+        "generateResponse" : "http://localhost:8000/query/get_question_and_facts",
+        "login" : "http://localhost:8000/user/login"
     }
 }

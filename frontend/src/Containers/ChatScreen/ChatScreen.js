@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SubmitButton } from '../../Components/SubmitButton';
 import { CustomSelect } from '../../Components/CustomSelect/CustomSelect';
+import Select from 'react-select'
 import { MessagesContainer } from '../MessagesContainer/';
 import styles from './ChatScreen.module.css';
 import { submitQuestion, getQuestionAndFacts } from '../../APIs';
+import AuthComponent from './AuthComponent';
 
 const user_profiles = {
     'user_1' : 'Rahul | English | Healthy',
@@ -106,10 +108,10 @@ export function ChatScreen() {
 
     const handleSendMessage = () => {
         const currentQuestion = questionRef.current
-        const selectedUser = selectedUserIdRef.current
+        // const selectedUser = selectedUserIdRef.current
 
         // Check if we have a question and call log docuument paths
-        if (!currentQuestion.trim() || !selectedUser.length) return;
+        if (!currentQuestion.trim()) return;
 
         setMessages(currentMessages => [
             ...currentMessages,
@@ -119,14 +121,14 @@ export function ChatScreen() {
             }
         ]);
 
-        submitQuestion(currentQuestion, selectedUser);
+        submitQuestion(currentQuestion);
         
         // Set a state to indicate that we are waiting for a response
         setResponseState(true); 
 
         // Clearing the input fields
         setQuestion('');
-        setUserId('')
+        // setUserId('')
     };
 
     return (
@@ -135,6 +137,9 @@ export function ChatScreen() {
                 <p>
                     Informed
                 </p>
+                <div className={styles.loginDiv}>
+                    <AuthComponent />
+                </div>
             </div>
 
             <MessagesContainer messages={messages} showLoader={waitingForResponse}/>
@@ -153,7 +158,7 @@ export function ChatScreen() {
                             onBlur={() => setIsFocused(false)}
                         />
                     </div>
-                    <div className={styles.linksContainer}>
+                    {/* <div className={styles.linksContainer}>
                         <CustomSelect
                             isMulti={false}
                             value={{ label : user_profiles[userId], value: userId}}
@@ -168,7 +173,7 @@ export function ChatScreen() {
 
                             placeholder="Select User"
                         />
-                    </div>
+                    </div> */}
                 </div>
                 <div className={styles.submitBtnContainer}>
                     <SubmitButton

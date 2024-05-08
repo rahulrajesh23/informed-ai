@@ -81,3 +81,8 @@ svg {
     height: 30px;
 }
 
+.loginDiv {
+    position: absolute;
+    float: right;
+    right: 30px;
+}
