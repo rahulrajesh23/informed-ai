@@ -31,10 +31,12 @@
     margin: 15% auto; /* 15% from the top and centered */
     display: flex;
     flex-direction: column;
-    height: 20%;
+    /* height: 20%; */
+    height: auto;
     /* padding: 20px; */
     border: 1px solid #888;
     width: 80%; /* Could be more or less, depending on screen size */
+    max-width: 725px;
     border-radius: 5px;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   }
@@ -58,6 +60,7 @@
     background: #008080;
     color: white; 
     height: 30%;
+    height: 50px;
     justify-content: center;
     display: flex;
     align-items: center;
@@ -76,17 +79,21 @@
     color: black;
   }
 
-  .usernameSubmit {
-    background-color: #008080; /* Banner color */
-  color: #fff; /* Text color */
-  border: none;
-  border-radius: 0.2em; /* Adjust this value for the roundness of the button */
-  padding: 10px 20px; /* Adjust padding as needed */
-  font-size: 16px; /* Adjust font size as needed */
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-
+  .passwordInput {
+    width: 100%;
+    height: 50px;
+    padding: 8px;
+    background-color: #c6e3fa61;
+    margin-right: 8px;
+    outline: none;
+    border: 1px solid #cccccc;
+    border-radius: .3em;
+    color: black;
   }
+
+
+
+  
 
   .userNameCancel {
     color: black;
@@ -100,14 +107,43 @@
     display: flex;
     padding: 20px;
     justify-content: space-between;
-    align-items: center;
+    /* align-items: center; */
+    flex-direction: column;
+  }
+
+  .loginFormContainer {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .loginFormContainer div {
+    padding: 15px 10px;
   }
 
   .userNameInputContainer {
-    width: 80%;
+    /* width: 80%; */
+  }
+  .passwordInputContainer {
+    /* width: 80%; */
   }
 
+
   .usernameSubmitContainer {
+    padding: 15px 10px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .usernameSubmit {
+    background-color: #008080; /* Banner color */
+    color: #fff; /* Text color */
+    border: none;
+    border-radius: 0.2em; /* Adjust this value for the roundness of the button */
+    padding: 10px 20px; /* Adjust padding as needed */
+    font-size: 18px; /* Adjust font size as needed */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
 
   }
 

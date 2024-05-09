@@ -43,8 +43,7 @@ class UserDetails(Base):
     country = Column(String(50))
     phone_number = Column(String)
     ethnicity = Column(String)
-    languages = relationship("Language", secondary="user_languages")
-    country = Column(String(50))
+    languages = relationship("UserLanguage", back_populates="user_details")
     user = relationship("User", back_populates="details")    
 
 class Language(Base):
@@ -56,7 +55,9 @@ class UserLanguage(Base):
     __tablename__ = 'user_languages'
     user_details_id = Column(Integer, ForeignKey('user_details.id'), primary_key=True)
     language_id = Column(Integer, ForeignKey('languages.id'), primary_key=True)
+    language = relationship("Language")
     is_preferred = Column(Boolean, default=False, nullable=False)
+    user_details = relationship("UserDetails", back_populates="languages")
 
 class UserMedicalDetails(Base):
     __tablename__ = 'user_medical_details'

@@ -14,7 +14,17 @@ def get_current_user(session_token: str = Cookie(None), db: Session = Depends(ge
     if not session_object or not session_object["username"]:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid session or expired session")
     
-    user = db.query(User).filter(User.username == session_object["username"]).first()
+    user = db.query(User).options(
+        # Load UserDetails
+        joinedload(User.details).options(
+            # Load languages through UserLanguage and join Language details
+            joinedload(UserDetails.languages).joinedload(UserLanguage.language),
+        ),
+        # Load UserMedicalDetails and nested HealthConditions
+        joinedload(User.medical_details).options(
+            joinedload(UserMedicalDetails.health_conditions)
+        )
+    ).filter(User.username == session_object["username"]).one_or_none()
 
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")

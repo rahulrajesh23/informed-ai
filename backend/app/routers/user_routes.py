@@ -20,7 +20,7 @@ async def register_user(user: CreateUserRequest, request: Request, db: db_depend
     if existing_user:
         raise HTTPException(status_code=400, detail="Username or email already exists")
 
-    # Create new user if not existing
+    # Create new user if it doesn't exist
     new_user = User(username=user.username, email=user.email, is_active=True, account_type="user")
     db.add(new_user)
     try:
@@ -44,7 +44,6 @@ async def set_user_details(username: str, details: UserDetailsRequest, db: db_de
         raise HTTPException(status_code=404, detail="User not found")
 
     # Handle the language details
-    # user_detail = db.query(UserDetails).filter(UserDetails.user_id == user.id).first()
     user_detail = user.details
     if not user_detail:
         user_detail = UserDetails(user_id=user.id)

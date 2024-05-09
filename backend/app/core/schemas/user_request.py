@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from typing import List, Optional
 
 class CreateUserRequest(BaseModel):
@@ -10,9 +10,11 @@ class LoginRequest(BaseModel):
     username: str
 
 
+
 class LanguageRequest(BaseModel):
     name: str
-    is_preferred: bool = False
+    is_preferred: bool = Field(default=False, description="Indicates if the language is preferred")
+
 
 class UserDetailsRequest(BaseModel):
     first_name: str

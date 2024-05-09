@@ -1,14 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './LoginModal.module.css';
-
+import { useDispatch, useSelector } from 'react-redux';
+import * as userActions from '../../store/actionCreators/userActionCreators'
 const LoginModal = ({ onClose, onLogin }) => {
+
+  const dispatch = useDispatch();
+  const user = useSelector(state => state.user.user);
+  const error = useSelector(state => state.user.error);
+  const isLoading = useSelector(state => state.user.isLoading);
+
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleLogin = () => {
-    onLogin(username);
+    dispatch(userActions.login({ username }))
+    // onLogin(username);
     setUsername('');
-    onClose();
+    setPassword('')
+    // onClose();
   };
+
+  useEffect(() => {
+    // console.info(`Waiting for response: ${waitingForResponse}`);
+    if(user && user.username) {
+      onLogin(user.username);
+      onClose();
+    }
+    
+    return () => {
+        // clearInterval(intervalID)
+    };
+}, [user]);
 
   return (
     <div className={styles.modal}>
@@ -22,15 +44,26 @@ const LoginModal = ({ onClose, onLogin }) => {
         </div>
         
         <div className={styles.loginActionsContainer}>
+          <div className={styles.loginFormContainer}>
             <div className={styles.userNameInputContainer}>
                 <input
                 type="text"
-                placeholder="Enter your username"
+                placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className={styles.userNameInput}
                 />
             </div>
+            <div className={styles.passwordInputContainer}>
+                <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={styles.userNameInput}
+                />
+            </div>
+          </div>
             <div className={styles.usernameSubmitContainer}>
                 <button className={styles.usernameSubmit} onClick={handleLogin}>Login</button>
             </div>

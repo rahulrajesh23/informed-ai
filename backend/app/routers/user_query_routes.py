@@ -28,18 +28,6 @@ async def submit_question(request: QuestionsRequest, db: db_dependency, current_
     # Check if the user exists
     user = current_user
 
-    print("------------\nUser Details (query)-----\n")
-
-    
-    user_obj = {
-        "details" : user.details,
-        "medical_details" : user.medical_details
-    }
-    print(user_obj["details"].age)
-    print(user_obj["details"].languages[0].name)
-    print(user_obj["medical_details"].health_conditions)
-
-    # print(user_obj["medical_details"].health_conditions[0].condition)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -65,7 +53,7 @@ async def submit_question(request: QuestionsRequest, db: db_dependency, current_
     
     # Temp hardcoded user profile
 
-    current_task = asyncio.create_task(process_query(request, user_obj))
+    current_task = asyncio.create_task(process_query(request, user))
     logger.info("Started new task for processing documents")
 
     return {"status": "processing"}
@@ -96,15 +84,14 @@ async def process_query(request: QuestionsRequest, user):
     async with lock:
         try:
             # user = user_profiles[request.user_id]
-            if user and user["details"] and user["details"].zip_code:
+            if user and user.details and user.details.zip_code:
                 extracted_info = []
                 try:
                     
                     
                     
                     # Extracting all text from the documents
-                    zip_alerts = await fetchAlerts(user["details"].zip_code)
-                    # zip_alerts = await fetchAlerts(userProfile['zip'])
+                    zip_alerts = await fetchAlerts(user.details.zip_code)
                     extracted_info = extract_alert_info(zip_alerts['data'])
 
                 except Exception as e:
