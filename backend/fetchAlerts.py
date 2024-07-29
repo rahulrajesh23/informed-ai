@@ -57,7 +57,6 @@ def main(zip_zones: dict) -> None:
 
     print("Alerts stored successfully.")
 
-
 zip_zones = {
     "92507": "CAZ065",
     "91701": "CAZ560",

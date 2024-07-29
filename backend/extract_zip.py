@@ -55,6 +55,5 @@ def main() -> None:
     save_to_json(final_output, output_file_path)
     print(f"Output saved to {output_file_path}")
 
-
 if __name__ == "__main__":
     main()

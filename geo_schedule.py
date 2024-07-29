@@ -83,7 +83,6 @@ def fetch_data():
     update_alerts_file(ip_address, geo_data, alerts)
     print("Database and alerts file updated successfully.")
 
-
 # Schedule the job every 4 hours
 schedule.every(4).hours.do(fetch_data)
 
