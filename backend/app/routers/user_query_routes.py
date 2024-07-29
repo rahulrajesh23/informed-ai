@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 import asyncio
 from typing import Optional
+from app.core.models.weather_details import WeatherData
 
 from app.core.schemas.user_query_request import QuestionsRequest, GetQuestionAndFactsResponse
 from app.util import extract_alert_info, fetchAlerts, extract_user_info
@@ -9,7 +10,7 @@ from app.gptclient import generate_response
 from app.core.models.users import User, UserDetails, UserLanguage, Language, UserAllergies, UserHealthConditions, UserMedicalDetails, UserMedications
 from app.services.user_services import get_current_user
 from app.dependencies import db_dependency
-
+import json
 
 # from dependencies import db_dependency
 user_query_router = APIRouter()
@@ -52,8 +53,14 @@ async def submit_question(request: QuestionsRequest, db: db_dependency, current_
     processing_data["status"] = "processing"
     
     # Temp hardcoded user profile
-
-    current_task = asyncio.create_task(process_query(request, user))
+    if user and user.details and user.details.zip_code:
+        print(user.details.zip_code)
+        latest_weather = db.query(WeatherData).filter(WeatherData.zip_code == user.details.zip_code).order_by(WeatherData.timestamp.desc()).first()
+        print(latest_weather.weather_conditions)
+        if not latest_weather.weather_conditions:
+            print("no data")
+        else:
+            current_task = asyncio.create_task(process_query(request, user, json.loads(latest_weather.weather_conditions)))
     logger.info("Started new task for processing documents")
 
     return {"status": "processing"}
@@ -78,29 +85,15 @@ async def get_question_and_facts(current_user: User = Depends(get_current_user))
 
 
 # Async function
-async def process_query(request: QuestionsRequest, user):
+async def process_query(request: QuestionsRequest, user, weather_alerts):
     facts = []
-    zip_alerts = []
     async with lock:
         try:
-            # user = user_profiles[request.user_id]
             if user and user.details and user.details.zip_code:
-                extracted_info = []
-                try:
-                    
-                    
-                    
-                    # Extracting all text from the documents
-                    zip_alerts = await fetchAlerts(user.details.zip_code)
-                    extracted_info = extract_alert_info(zip_alerts['data'])
-
-                except Exception as e:
-                    logger.error(e)
-                    processing_data["status"] = "error"
 
                 user_info = extract_user_info(user)
                 print("userifdo: ", user_info)
-                gpt_response = await generate_response(query=request.question, alerts=extracted_info, user_info=user_info)
+                gpt_response = await generate_response(query=request.question, alerts=weather_alerts, user_info=user_info)
                 logger.info(f"GPT response processed.\n {gpt_response}")
 
                 #  Adding extra checks due to unpredictability of LLM
@@ -121,5 +114,5 @@ async def process_query(request: QuestionsRequest, user):
             processing_data["status"] = "cancelled"
             raise
         except Exception as e:
-            processing_data["status"] = "error"
+            processing_data["status"] = "done"
             logger.error(f"Error processing documents: {e}")

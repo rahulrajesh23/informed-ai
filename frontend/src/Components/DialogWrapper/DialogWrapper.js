@@ -30,21 +30,6 @@ const DialogWrapper = ({ open, onClose, title, children, onSave, actions }) => {
                 }
             </DialogActions>
       }
-      {/* { onSave || onClose &&
-      
-        <DialogActions>
-            { onClose && 
-                <Button onClick={onClose} color="primary">
-                    Cancel
-                </Button>
-            }
-            { onSave && 
-                <Button onClick={onSave} color="primary">
-                    Save
-                </Button>
-            }
-        </DialogActions>
-      } */}
     </Dialog>
   );
 };

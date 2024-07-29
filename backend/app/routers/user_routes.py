@@ -4,7 +4,7 @@ import json
 import secrets
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
-from app.core.models.users import User, UserDetails, UserLanguage, Language, UserAllergies, UserHealthConditions, UserMedicalDetails, UserMedications
+from app.core.models.users import User, UserDetails, UserLanguage, Language, UserAllergies, UserHealthConditions, UserMedicalDetails, UserMedications, WeatherSensitivities
 from app.core.schemas.user_request import CreateUserRequest, LoginRequest, UserDetailsRequest, UserDetailsResponse, LanguageResponse, MedicalDetails, UserMedicalDetailsRequest
 from app.dependencies import db_dependency, get_db, redis_client
 from app.services.user_services import get_current_user
@@ -128,7 +128,8 @@ async def get_medical_details(username: str, db: db_dependency, current_user: Us
     
     user_medical_details = db.query(UserMedicalDetails).options(
         joinedload(UserMedicalDetails.health_conditions),
-        joinedload(UserMedicalDetails.medications)
+        joinedload(UserMedicalDetails.medications),
+        joinedload(UserMedicalDetails.weather_sensitivities)
     ).filter(UserMedicalDetails.user_id == user.id).first()
     if not user_medical_details:
         raise HTTPException(status_code=404, detail="Medical details not found")
@@ -149,31 +150,42 @@ async def set_medical_details(username: str, details: UserMedicalDetailsRequest,
         medical_details = user.medical_details
     else:
         medical_details = UserMedicalDetails(user_id=user.id)
-        db.add(medical_details)
 
     medical_details.blood_type = details.blood_type
     medical_details.height = details.height
     medical_details.weight = details.weight
-    print("medical_details id ", medical_details.id)
+    db.add(medical_details)
+    db.commit()  # Commit the transaction to ensure the ID is generated
+    db.refresh(medical_details)
+
+    VALID_SENSITIVITY_TYPES = ['rain', 'temperature', 'air_quality']
+
+    db.query(WeatherSensitivities).filter(
+        WeatherSensitivities.user_medical_id == medical_details.id
+    ).delete()
+    # Handle weather sensitivities
+    for sensitivity in details.weather_sensitivities:
+        if sensitivity.type not in VALID_SENSITIVITY_TYPES:
+            raise ValueError(f"Invalid sensitivity type: {sensitivity.type}")
+
+        ws = WeatherSensitivities(user_medical_id=medical_details.id, type=sensitivity.type, description=sensitivity.description)
+        db.add(ws)
+
+    # Remove all existing health conditions
+    # TODO: Instead we should remove/update by id
+    db.query(UserHealthConditions).filter(
+        UserHealthConditions.user_medical_id == medical_details.id
+    ).delete()
+
     # Handle health conditions
     for condition in details.health_conditions:
-        if condition.id:
-            hc = db.query(UserHealthConditions).filter(
-                UserHealthConditions.id == condition.id,
-                UserHealthConditions.user_medical_id == medical_details.id
-            ).first()
-            if hc:
-                hc.condition = condition.condition
-                hc.severity = condition.severity
-                hc.description = condition.description
-        else:
-            hc = UserHealthConditions(
-                user_medical_id=medical_details.id,
-                condition=condition.condition,
-                severity=condition.severity,
-                description=condition.description
-            )
-            db.add(hc)
+        hc = UserHealthConditions(
+            user_medical_id=medical_details.id,
+            condition=condition.condition,
+            severity=condition.severity,
+            description=condition.description
+        )
+        db.add(hc)
 
     # Handle medications
     for med in details.medications:

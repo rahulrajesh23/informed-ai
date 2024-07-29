@@ -67,6 +67,17 @@ class UserMedicalDetails(Base):
     height = Column(Float)  # In centimeters or meters
     weight = Column(Float)  # In kilograms
 
+    
+
+
+class WeatherSensitivities(Base):
+    __tablename__ = 'weather_sensitivities'
+    id = Column(Integer, primary_key=True)
+    user_medical_id = Column(Integer, ForeignKey('user_medical_details.id'))
+    type = Column(String(50))  # e.g., rain, temperature, air_quality
+    description = Column(Text)
+
+    
 class UserHealthConditions(Base):
     __tablename__ = 'user_health_conditions'
     id = Column(Integer, primary_key=True)
@@ -93,6 +104,9 @@ class UserAllergies(Base):
 
 UserMedicalDetails.user = relationship("User", back_populates="medical_details")
 User.medical_details = relationship("UserMedicalDetails", back_populates="user", uselist=False)
+
+UserMedicalDetails.weather_sensitivities = relationship("WeatherSensitivities", back_populates="user_medical_details")
+WeatherSensitivities.user_medical_details = relationship("UserMedicalDetails", back_populates="weather_sensitivities")
 
 UserHealthConditions.user_medical_details = relationship("UserMedicalDetails", back_populates="health_conditions")
 UserMedicalDetails.health_conditions = relationship("UserHealthConditions", back_populates="user_medical_details")

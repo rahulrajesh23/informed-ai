@@ -70,6 +70,11 @@ class Medication(BaseModel):
     dosage: str
     frequency: str
 
+class WeatherSensitivity(BaseModel):
+    id: Optional[int] = None
+    type: str
+    description: str
+
 class MedicalDetails(BaseModel):
     id: Optional[int] = None
     blood_type: Optional[str] = None
@@ -77,10 +82,13 @@ class MedicalDetails(BaseModel):
     weight: Optional[float] = None
     health_conditions: List[HealthCondition] = []
     medications: List[Medication] = []
+    weather_sensitivities: List[WeatherSensitivity] = []
 
 class UserMedicalDetailsRequest(BaseModel):
     blood_type: Optional[str] = None
     height: Optional[float] = None
     weight: Optional[float] = None
     health_conditions: List[HealthCondition] = []
+    weather_sensitivities: List[WeatherSensitivity] = []
     medications: List[Medication] = []
+

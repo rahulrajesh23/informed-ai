@@ -22,7 +22,8 @@ def get_current_user(session_token: str = Cookie(None), db: Session = Depends(ge
         ),
         # Load UserMedicalDetails and nested HealthConditions
         joinedload(User.medical_details).options(
-            joinedload(UserMedicalDetails.health_conditions)
+            joinedload(UserMedicalDetails.health_conditions),
+            joinedload(UserMedicalDetails.weather_sensitivities)
         )
     ).filter(User.username == session_object["username"]).one_or_none()
 
