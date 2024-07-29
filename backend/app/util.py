@@ -34,6 +34,12 @@ def extract_user_info(user):
         if(preferred_language and preferred_language.name):
             user_info += f"Preferred Language: {preferred_language.name}; "
         user_info += f"Age: {user.details.age};"
+        if user.medical_details and user.medical_details.weather_sensitivities and len(user.medical_details.weather_sensitivities) > 0:
+            weather_sensitivities = user.medical_details.weather_sensitivities
+            user_info += 'Weather Sensitivites: '
+            for i, weather_sensitivity in enumerate(weather_sensitivities):
+                user_info += f"sensitivity_{i+1}: {weather_sensitivity.type}, description: {weather_sensitivity.description}"
+            user_info += ';'
         if user.medical_details and user.medical_details.health_conditions and len(user.medical_details.health_conditions) > 0:
             health_conditions = user.medical_details.health_conditions
             user_info += 'Health Conditions: '

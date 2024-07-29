@@ -1,6 +1,10 @@
 import os
 import tiktoken
 import json
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
+
 from openai import AsyncOpenAI
 from app.config import logger, ENV_VARS
 import torch
@@ -9,6 +13,7 @@ from app.core.models.users import User
 from app.util import extract_user_info
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device('mps') if torch.backends.mps.is_available() else device
 selfcheck_nli = SelfCheckNLI(device=device)
 
 GPT_APIKEY = ENV_VARS["GPT_APIKEY"]
@@ -17,7 +22,10 @@ GPT_MODEL_NAME = ENV_VARS["GPT_MODEL_NAME"]
 
 # Context and Response Token size can be adjusted according to business requirements 
 MAX_CONTEXT_SIZE = 7000 
-MAX_RESPONSE_TOKENS = 1000
+MAX_RESPONSE_TOKENS = 150
+# MAX_RESPONSE_TOKENS = 1000
+
+executor = ThreadPoolExecutor()
 
 openAIClient = AsyncOpenAI(
   api_key= GPT_APIKEY,
@@ -80,7 +88,7 @@ async def generate_response(query='', alerts = [], user_info='', num_samples=3, 
     messages = [
             {
                 "role": "system",
-                "content": "You are a highly skilled AI tasked with analyzing Weather alerts and giving users advice based on their Age and health in json format. Given a user's question, their details, and weather info, your role involves identifying the most reasonable advice to give them about their query. If no answers are possible for the question-query, simply return empty array of facts'. Example= Query: What's the Weather like? Can I go for a walk? Response: {'facts':['The weather is good','The temperature is 38 C', 'Perfect weather for a walk']}. Try to answer in their preferred language of choice. If not available, English works"                
+                "content": "You are a highly skilled AI tasked with analyzing Weather alerts and giving users advice based on their health details and preferences in json format. Given a user's question, their details, and weather info, your role involves identifying the most reasonable advice to give them about their query. If no answers are possible for the question-query, simply return empty array of facts'. Example= Query: What's the Weather like? Can I go for a walk? Response: {'facts':['The weather is good','The temperature is 38 C', 'Perfect weather for a walk']}. Try to answer in their preferred language of choice. If not available, English works"                
             }, 
             {
                 "role": "user",
@@ -93,38 +101,47 @@ async def generate_response(query='', alerts = [], user_info='', num_samples=3, 
         logger.info(f"Number of tokens in LLM prompt: {num_tokens}")
         if num_tokens > MAX_CONTEXT_SIZE - config['max_tokens']: # To control the input text size
             return {
-                "status" : "error",
+                "status" : "done",
                 "facts" : ["Sorry, that's too much text for me to process. Can you reduce the number of attached files and try again?"]
             }
         
         sentences = []
         samples = []
-
-        for i in range(num_samples+1):
-            sample_response = await getLLMResponse(messages, config)
+        tasks = [getLLMResponse(messages, config) for _ in range(num_samples)]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        print("************************")
+        print("Results length", len(results))
+        print("************************")
+        for i, sample_response in enumerate(results):
+            if isinstance(sample_response, Exception):
+                logger.error(f"Error in GPT response {i+1}: {sample_response}")
+                continue
 
             logger.info(f"GPT Response {i+1}: {sample_response}")
 
-            if(sample_response):
-                try:
-                    sample_response = json.loads(sample_response)
-                    if "facts" in sample_response and isinstance(sample_response['facts'], list) and len(sample_response["facts"]) > 0:
-                        if i ==0:
-                            # Main Response
-                            sentences = sample_response["facts"]
-                        else:
-                            # Sampled Responses
-                            samples.append(".".join(sample_response["facts"]))
-                except Exception as e:
-                    print("exception")
-                    logger.error(e)
-
+            try:
+                sample_response = json.loads(sample_response)
+                if "facts" in sample_response and isinstance(sample_response['facts'], list) and len(sample_response["facts"]) > 0:
+                    if i ==0:
+                        # Main Response
+                        sentences = sample_response["facts"]
+                    else:
+                        # Sampled Responses
+                        samples.append(".".join(sample_response["facts"]))
+                    # samples.append(".".join(sample_response["facts"]))
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON decode error for GPT response {i+1}: {e}")
             
 
-        sent_scores_nli = selfcheck_nli.predict(
-            sentences = sentences,      # list of sentences from primary GPT response
-            sampled_passages = samples, # list of passages from sampled GPT responses
-        )
+        print("temp before self check")
+        # Run the predict method in a separate thread to avoid blocking
+        # loop = asyncio.get_event_loop()
+        # sent_scores_nli = await loop.run_in_executor(executor, selfcheck_nli.predict, sentences, samples)
+        sent_scores_nli = await asyncio.to_thread(selfcheck_nli.predict, sentences, samples)
+
+
+        print("temp after self check")
+        
         contradiction_score = sum(sent_scores_nli) / len(sent_scores_nli)
 
         logger.info(f"Overall Contradiction: {contradiction_score}")
@@ -135,14 +152,14 @@ async def generate_response(query='', alerts = [], user_info='', num_samples=3, 
             return response
         else:
             return {
-            "status" : "success",
+            "status" : "done",
             "facts" : ["Sorry, I cant answer your question"]
             }
         
     except Exception as e:
         logger.error(e)
         return {
-            "status" : "error",
+            "status" : "done",
             "facts" : ["Sorry, I'm having some trouble answering your question. Please contact support"]
         }
 
