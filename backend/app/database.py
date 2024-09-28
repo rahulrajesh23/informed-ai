@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from app.config import ENV_VARS
+from backend.app.config import ENV_VARS
 
 DB_USERNAME = ENV_VARS["DB_USERNAME"]
 DB_PASSWORD = ENV_VARS["DB_PASSWORD"]

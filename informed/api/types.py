@@ -1,3 +1,18 @@
+from pydantic import BaseModel
+from typing import List, Optional
+from informed.db_models.users import UserLanguage, UserHealthConditions
+class QuestionsRequest(BaseModel):
+    question: str
+
+class GetQuestionAndFactsResponse(BaseModel):
+    question: str
+    facts: Optional[List[str]] = None
+    status: str
+    source: Optional[str] = None
+
+
+# User
+
 from pydantic import BaseModel, field_validator, Field
 from typing import List, Optional
 
@@ -36,9 +51,6 @@ class UserDetailsRequest(BaseModel):
             raise ValueError('At least one language is required')
         return v
     
-class LanguageResponse(BaseModel):
-    name: str
-    is_preferred: bool
 
 class UserDetailsResponse(BaseModel):
     first_name: str
@@ -52,10 +64,7 @@ class UserDetailsResponse(BaseModel):
     country: Optional[str] = None
     phone_number: Optional[str] = None
     ethnicity: Optional[str] = None
-    languages: List[LanguageResponse]
-
-
-
+    languages: List[UserLanguage] = []
 
 
 class HealthCondition(BaseModel):
@@ -70,17 +79,10 @@ class Medication(BaseModel):
     dosage: str
     frequency: str
 
-class MedicalDetails(BaseModel):
-    id: Optional[int] = None
-    blood_type: Optional[str] = None
-    height: Optional[float] = None
-    weight: Optional[float] = None
-    health_conditions: List[HealthCondition] = []
-    medications: List[Medication] = []
 
 class UserMedicalDetailsRequest(BaseModel):
     blood_type: Optional[str] = None
     height: Optional[float] = None
     weight: Optional[float] = None
-    health_conditions: List[HealthCondition] = []
-    medications: List[Medication] = []
+    health_conditions: List[dict] = []
+    medications: List[dict] = []

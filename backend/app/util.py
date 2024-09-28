@@ -1,14 +1,10 @@
 import httpx
-import os
-import json
-from app.config import logger, ENV_VARS
+from loguru import logger
+
+from backend.app.config import ENV_VARS
 from urllib.parse import urlparse
 from fastapi import HTTPException, Depends
-from app.dependencies import db_dependency, redis_client, get_db
-from app.core.models.users import User, UserDetails, UserLanguage, Language, UserAllergies, UserHealthConditions, UserMedicalDetails, UserMedications
-from sqlalchemy.orm import Session
 import ipaddress
-from app.services.user_services import get_current_user
 
 APP_ENV = ENV_VARS["APP_ENV"]
 
