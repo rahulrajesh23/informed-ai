@@ -12,12 +12,14 @@ from opentelemetry._logs import set_logger_provider
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
-from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, SimpleLogRecordProcessor
+from opentelemetry.sdk._logs.export import (
+    BatchLogRecordProcessor,
+    SimpleLogRecordProcessor,
+)
 from opentelemetry.sdk.resources import Resource
 
 from informed.config import Config
-
-from informed.logger.types import LogCategory, LogLevels
+from informed.logger.log_types import LogLevels
 
 if TYPE_CHECKING:
     from loguru import Record
@@ -37,7 +39,10 @@ def _filter_uvicorn_health_access_logs() -> None:
 def setup_logger(config: Config, override_level: str | None = None) -> None:
     logger.remove()
 
-    if config.telemetry_config.enabled and config.telemetry_config.opentelemetry_config.enabled:
+    if (
+        config.telemetry_config.enabled
+        and config.telemetry_config.opentelemetry_config.enabled
+    ):
         _opentelemetry_logging(config)
     else:
         # only forward uvicorn logging if otel is disabled. otherwise two loguru handlers collide
@@ -58,8 +63,11 @@ def _loguru_sink_filters(level: str) -> Callable:
         if level != "DEBUG" and "level" in record:
             record_level = record["level"]
             if (
-                hasattr(record_level, "no")  # have to compare using tuple as type loguru.Level is not exposed
-                and record_level.no == LogLevels.DIAGNOSTIC.value  # pyright: ignore[reportAttributeAccessIssue]
+                hasattr(
+                    record_level, "no"
+                )  # have to compare using tuple as type loguru.Level is not exposed
+                and record_level.no
+                == LogLevels.DIAGNOSTIC.value  # pyright: ignore[reportAttributeAccessIssue]
             ):
                 return False
 
@@ -89,7 +97,11 @@ def _loguru_unwrapping_sink(level: str, is_jsonify: bool) -> Callable:
 
 
 def _loguru_sink(config: Config, override_level: str | None = None) -> None:
-    level = override_level.upper() if override_level else config.logging_config.level.upper()
+    level = (
+        override_level.upper()
+        if override_level
+        else config.logging_config.level.upper()
+    )
 
     logger.add(
         _loguru_unwrapping_sink(level, config.logging_config.jsonify),
@@ -112,7 +124,11 @@ def _loguru_sink(config: Config, override_level: str | None = None) -> None:
 
 
 def _uvicorn_loguru_loging() -> None:
-    loggers = (logging.getLogger(name) for name in logging.root.manager.loggerDict if name.startswith("uvicorn."))
+    loggers = (
+        logging.getLogger(name)
+        for name in logging.root.manager.loggerDict
+        if name.startswith("uvicorn.")
+    )
 
     for uvicorn_logger in loggers:
         uvicorn_logger.handlers = []
@@ -127,7 +143,9 @@ def _uvicorn_loguru_loging() -> None:
                 loguru_record["function"] = record.funcName
                 loguru_record["line"] = record.lineno
 
-            logger.patch(patch_function_and_line).opt(exception=record.exc_info).log(level, record.getMessage())
+            logger.patch(patch_function_and_line).opt(exception=record.exc_info).log(
+                level, record.getMessage()
+            )
 
         # change handler for default uvicorn logger
 
@@ -138,7 +156,7 @@ def _uvicorn_loguru_loging() -> None:
 def _opentelemetry_logging(config: Config) -> None:
     # Set up root otel logger
     _setup_otel_logger(config)
-    logger.info("Instrumented loguru with OpenTelemetry", category=LogCategory.BOOTSTRAP)
+    logger.info("Instrumented loguru with OpenTelemetry")
 
 
 def _fix_extras_loguru(record: logging.LogRecord) -> None:
@@ -165,11 +183,6 @@ def _setup_otel_logger(config: Config) -> None:
             _fix_extras_loguru(record)
             self.base_handler.handle(record)
 
-    def isTraceRecord(record: "Record") -> bool:
-        if "category" in record["extra"]:
-            return bool(record["extra"]["category"] == LogCategory.LLM_TRACE)
-        return False
-
     # Create logger providers
     default_logger_provider = LoggerProvider(resource=create_otel_resource(config))
     trace_logger_provider = LoggerProvider(resource=create_otel_resource(config))
@@ -183,17 +196,20 @@ def _setup_otel_logger(config: Config) -> None:
     batch_log_record_processor = BatchLogRecordProcessor(oltp_exporter)
 
     default_logger_provider.add_log_record_processor(batch_log_record_processor)
-    trace_logger_provider.add_log_record_processor(SimpleLogRecordProcessor(oltp_exporter))
+    trace_logger_provider.add_log_record_processor(
+        SimpleLogRecordProcessor(oltp_exporter)
+    )
 
     # loguru only supports one logger. So we need to conditionally associate different handlers.
     # Create the default handler
-    default_handler: logging.Handler = LoggingHandler(logger_provider=default_logger_provider)
+    default_handler: logging.Handler = LoggingHandler(
+        logger_provider=default_logger_provider
+    )
     LoggingInstrumentor().instrument(set_logging_format=True)
     logger.add(
         FixExtrasAndPropagateToLoggingHandler(),
         format="{message}",
         level=config.logging_config.level,
-        filter=lambda record: not isTraceRecord(record),
     )
     root_logger = logging.getLogger()
     root_logger.addHandler(default_handler)
@@ -203,12 +219,13 @@ def _setup_otel_logger(config: Config) -> None:
             root_logger.removeHandler(log_handler)
 
     # Create handler for Langsmith traces.
-    trace_handler: logging.Handler = LoggingHandler(logger_provider=trace_logger_provider)
+    trace_handler: logging.Handler = LoggingHandler(
+        logger_provider=trace_logger_provider
+    )
     logger.add(
         FixExtrasHandler(trace_handler),
         format="{message}",
         level=config.logging_config.level,
-        filter=isTraceRecord,
     )
 
 
@@ -225,7 +242,9 @@ def _set_levels() -> None:
         _ = logger.level(LogLevels.DIAGNOSTIC.name)
     except ValueError:
         # Add the level
-        logger.level(LogLevels.DIAGNOSTIC.name, LogLevels.DIAGNOSTIC.value, color="<yellow><dim>")
+        logger.level(
+            LogLevels.DIAGNOSTIC.name, LogLevels.DIAGNOSTIC.value, color="<yellow><dim>"
+        )
 
 
 instance_id = str(uuid.uuid4())

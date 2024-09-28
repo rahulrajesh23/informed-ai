@@ -1,14 +1,10 @@
 import json
-import os
-from datetime import timedelta
 from enum import Enum
 from typing import Any, Literal, Self
 
 from loguru import logger as log
 from pydantic import BaseModel, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-from informed.logger.types import LogCategory
 
 
 class SafeDumpableModel(BaseModel):
@@ -40,8 +36,6 @@ class CacheConfig(SafeDumpableModel):
     store: dict[str, Any] = {}
 
 
-
-
 class RetrievalConfig(SafeDumpableModel):
     enabled: bool = Field(default=True, exclude=False)
     kubernetes_max_results: int = Field(default=10, exclude=False)
@@ -57,7 +51,9 @@ class RetrievalConfig(SafeDumpableModel):
 class AzureOpenAILLMConfig(SafeDumpableModel):
     api_key: SecretStr
     api_version: str = Field(default="2024-05-01-preview", exclude=False)
-    api_base: str = Field(default="https://azure-oai-1.openai.azure.com/", exclude=False)
+    api_base: str = Field(
+        default="https://azure-oai-1.openai.azure.com/", exclude=False
+    )
 
 
 class OpenAILLMConfig(SafeDumpableModel):
@@ -102,7 +98,9 @@ class EmbeddingProvider(str, Enum):
 # See instructions in READMD.md for switching between different LLM/embedding providers or models
 class LLMConfig(SafeDumpableModel):
     # TODO (peter): support different models at the request level
-    cache_config: CacheConfig = CacheConfig(enabled=False, kind=CacheKind.INMEMORY, name="llm_cache")
+    cache_config: CacheConfig = CacheConfig(
+        enabled=False, kind=CacheKind.INMEMORY, name="llm_cache"
+    )
     llm_provider: LLMProvider = Field(exclude=False)
     llm_model_name: str = Field(exclude=False)
     embedding_provider: EmbeddingProvider = Field(exclude=False)
@@ -120,14 +118,16 @@ class LLMConfig(SafeDumpableModel):
     wait_on_retry: bool = Field(default=True, exclude=False)
 
     def validate_api_keys_are_set(self) -> None:
-        if (self.llm_provider == LLMProvider.OPENAI or self.embedding_provider == EmbeddingProvider.OPENAI) and (
-            not self.openai
-        ):
+        if (
+            self.llm_provider == LLMProvider.OPENAI
+            or self.embedding_provider == EmbeddingProvider.OPENAI
+        ) and (not self.openai):
             raise ValueError("OpenAI API key is not set")
 
-        if (self.llm_provider == LLMProvider.AZURE or self.embedding_provider == EmbeddingProvider.AZURE) and (
-            not self.azure
-        ):
+        if (
+            self.llm_provider == LLMProvider.AZURE
+            or self.embedding_provider == EmbeddingProvider.AZURE
+        ) and (not self.azure):
             raise ValueError("Azure OpenAI API key is not set")
 
         if self.llm_provider == LLMProvider.ANTHROPIC and not self.anthropic:
@@ -146,7 +146,10 @@ class LLMConfig(SafeDumpableModel):
             params = self.azure
         if self.llm_provider == LLMProvider.ANTHROPIC and self.anthropic:
             params = self.anthropic
-        if self.llm_provider in [LLMProvider.VERTEX_AI, LLMProvider.VERTEX_AI_BETA] and self.vertex_llm:
+        if (
+            self.llm_provider in [LLMProvider.VERTEX_AI, LLMProvider.VERTEX_AI_BETA]
+            and self.vertex_llm
+        ):
             params = self.vertex_llm
         if params is not None:
             params_dict = params.model_dump()
@@ -167,7 +170,10 @@ class LLMConfig(SafeDumpableModel):
             params = self.openai
         if self.embedding_provider == EmbeddingProvider.AZURE and self.azure:
             params = self.azure
-        if self.embedding_provider == EmbeddingProvider.VERTEX_AI and self.vertex_embedding:
+        if (
+            self.embedding_provider == EmbeddingProvider.VERTEX_AI
+            and self.vertex_embedding
+        ):
             params = self.vertex_embedding
         if params is not None:
             params_dict = params.model_dump()
@@ -175,8 +181,9 @@ class LLMConfig(SafeDumpableModel):
                 if annotation == SecretStr and name in params_dict:
                     params_dict[name] = getattr(params, name).get_secret_value()
             return params_dict
-        raise ValueError(f"invalid parameters for embedding provider: {self.embedding_provider}")
-
+        raise ValueError(
+            f"invalid parameters for embedding provider: {self.embedding_provider}"
+        )
 
 
 class OpenTelemetryTracingConfig(SafeDumpableModel):
@@ -184,16 +191,16 @@ class OpenTelemetryTracingConfig(SafeDumpableModel):
     sample_rate: float = Field(default=1.0, exclude=False)
 
 
-
 class TelemetryConfig(SafeDumpableModel):
     enabled: bool = Field(default=False, exclude=False)
     console_enabled: bool = Field(default=False, exclude=False)
-    opentelemetry_config: OpenTelemetryTracingConfig = OpenTelemetryTracingConfig(enabled=True)
+    opentelemetry_config: OpenTelemetryTracingConfig = OpenTelemetryTracingConfig(
+        enabled=True
+    )
 
 
 class UIConfig(SafeDumpableModel):
     web_url: str = Field(default="http://localhost:3000/", exclude=False)
-
 
 
 class AuthConfig(SafeDumpableModel):
@@ -222,10 +229,12 @@ class DatabaseConfig(SafeDumpableModel):
         return self
 
 
-
 class Config(SafeDumpableModel, BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=(".env", ".env.overrides"), env_file_encoding="utf-8", extra="ignore", env_nested_delimiter="__"
+        env_file=(".env", ".env.overrides"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+        env_nested_delimiter="__",
     )
 
     service_name: str = "informed-core"
@@ -245,5 +254,5 @@ class Config(SafeDumpableModel, BaseSettings):
 def get_config(print_config: bool = False) -> Config:
     config = Config.from_env()
     if print_config:
-        log.bind(category=LogCategory.CONFIG).info(json.dumps(config.safe_model_dump()))
+        log.info(json.dumps(config.safe_model_dump()))
     return config

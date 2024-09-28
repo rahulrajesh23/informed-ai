@@ -6,7 +6,12 @@ from alembic import command, config
 from loguru import logger as log
 from sqlalchemy import Connection, Engine, create_engine
 from sqlalchemy.engine.url import URL, make_url
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 
@@ -45,7 +50,11 @@ class DatabaseEngine:
 
     @classmethod
     def init(
-        cls, url: URL | str, max_pool_size: int = 5, max_overflow: int = 10, use_contextvars: bool = False
+        cls,
+        url: URL | str,
+        max_pool_size: int = 5,
+        max_overflow: int = 10,
+        use_contextvars: bool = False,
     ) -> AsyncEngine:
         cls.use_contextvars = use_contextvars
         engine = cls._get_instance()
@@ -80,7 +89,9 @@ class DatabaseEngine:
 @asynccontextmanager
 async def session_maker() -> AsyncGenerator[AsyncSession, None]:
     engine = DatabaseEngine.get()
-    async with async_sessionmaker(expire_on_commit=False, bind=engine, class_=AsyncSession)() as session:
+    async with async_sessionmaker(
+        expire_on_commit=False, bind=engine, class_=AsyncSession
+    )() as session:
         yield session
 
 
@@ -93,7 +104,9 @@ def sync_session_maker() -> Session:
 def init_db(database_config: DatabaseConfig) -> None:
     url = make_url(database_config.db_url)
     DatabaseEngine.init(
-        url, database_config.connection_pool_config.max_pool_size, database_config.connection_pool_config.max_overflow
+        url,
+        database_config.connection_pool_config.max_pool_size,
+        database_config.connection_pool_config.max_overflow,
     )
     log.info(
         "Setting up db, drivername: {}, username: {}, host: {}, port: {}, database: {}, max_pool_size: {}, max_overflow: {}",

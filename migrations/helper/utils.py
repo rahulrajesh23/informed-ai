@@ -13,7 +13,9 @@ def batch_update(
     values: list[Any],
 ) -> None:
     if len(ids) != len(values):
-        raise ValueError(f"ids and values must have the same length, but got {len(ids)} and {len(values)}")
+        raise ValueError(
+            f"ids and values must have the same length, but got {len(ids)} and {len(values)}"
+        )
     if len(ids) == 0:
         return
     # Construct the CASE statement for the batch update

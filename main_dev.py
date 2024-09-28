@@ -1,16 +1,14 @@
+import ast
 import os
 import signal
 import subprocess
 import sys
 import threading
-from distutils.util import strtobool
 
-import requests
 import uvicorn
 from fastapi import FastAPI
 from loguru import logger as log
 from sqlalchemy import create_engine
-from tenacity import retry, stop_after_attempt, wait_fixed
 from testcontainers.core.image import DockerImage
 from testcontainers.postgres import PostgresContainer
 
@@ -18,14 +16,16 @@ from testcontainers.postgres import PostgresContainer
 from informed.config import get_config
 from informed.db import upgrade_db
 from main import create_default_app
-from testcontainers.core.waiting_utils import wait_for_logs
+
+
+def strtobool(val):
+    return val.lower() in ("y", "yes", "t", "true", "on", "1")
 
 
 def _run_upgrade(db_connection_string: str):
     engine = create_engine(db_connection_string)
     with engine.begin() as conn:
         upgrade_db(conn)
-
 
 
 def signal_handler(signum, frame):
@@ -41,7 +41,7 @@ def run_ui():
     ui_dir = os.path.join(os.getcwd(), "frontend")
     log.info("Starting UI in directory: {}", ui_dir)
     try:
-        subprocess.run(["npm", "run", "dev"], cwd=ui_dir, check=True)  # noqa: S607, S603
+        subprocess.run(["npm", "run", "dev"], cwd=ui_dir, check=True)  # noqa: S603
     except subprocess.CalledProcessError as e:
         log.error("Failed to start UI: {}", str(e))
     except FileNotFoundError:
@@ -49,19 +49,21 @@ def run_ui():
 
 
 def start_server(db_connection_string: str) -> None:
-    # load_toolkits_flag = bool(strtobool(os.environ.get("USER_LOAD_DEFAULT_TOOLKITS", "true")))
+    # Replace strtobool with ast.literal_eval
     start_ui_flag = bool(strtobool(os.environ.get("USER_START_UI", "true")))
     enable_auth = bool(strtobool(os.environ.get("ENABLE_AUTH", "false")))
 
     if enable_auth:
-        os.environ["AUTH_CONFIG__WORKOS_CONFIG__REDIRECT_URI"] = "http://localhost:3001/api/v1/auth/callback"
-        os.environ["AUTH_CONFIG__WORKOS_CONFIG__ORGANIZATION_ID"] = "org_01J2STQ7C69GYJZJMNB8D6MGGQ"
+        os.environ["AUTH_CONFIG__WORKOS_CONFIG__REDIRECT_URI"] = (
+            "http://localhost:3001/api/v1/auth/callback"
+        )
+        os.environ["AUTH_CONFIG__WORKOS_CONFIG__ORGANIZATION_ID"] = (
+            "org_01J2STQ7C69GYJZJMNB8D6MGGQ"
+        )
     else:
         os.environ["AUTH_CONFIG__AUTH_MODE"] = "SUPERUSER"
         os.environ["AUTH_CONFIG__WORKOS_CONFIG__REDIRECT_URI"] = "dummy"
         os.environ["AUTH_CONFIG__WORKOS_CONFIG__ORGANIZATION_ID"] = "dummy"
-
-
 
     _run_upgrade(db_connection_string)
     print(f"db_connection_string: {db_connection_string}")
@@ -80,7 +82,9 @@ def start_server(db_connection_string: str) -> None:
     try:
         # Start the server in a separate thread
         log.info("Starting server on {}:{}", host, port)
-        server_thread = threading.Thread(target=run_informed_server, args=(app, host, port))
+        server_thread = threading.Thread(
+            target=run_informed_server, args=(app, host, port)
+        )
         server_thread.start()
 
         # log.info("Server thread started. API URL: {}", api_url)
@@ -90,7 +94,6 @@ def start_server(db_connection_string: str) -> None:
             log.info("Starting UI...")
             ui_thread = threading.Thread(target=run_ui)
             ui_thread.start()
-
 
         # Keep the main thread alive
         server_thread.join()
@@ -116,7 +119,9 @@ if __name__ == "__main__":
         try:
             with DockerImage(path="misc/images/pgvector") as image, PostgresContainer(
                 "postgres:latest", driver="psycopg"
-            ).with_bind_ports(5432, 5432).with_env("POSTGRES_POSTGRES_PASSWORD", "password").with_env(
+            ).with_bind_ports(5432, 5432).with_env(
+                "POSTGRES_POSTGRES_PASSWORD", "password"
+            ).with_env(
                 "POSTGRES_INITSCRIPTS_PASSWORD", "password"
             ).with_env(
                 "POSTGRES_INITSCRIPTS_USERNAME", "postgres"

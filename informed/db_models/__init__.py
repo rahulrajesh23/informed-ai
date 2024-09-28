@@ -1,7 +1,17 @@
 from sqlmodel import Field, Relationship, SQLModel
 
+from .shared_types import EnumAsString, JSONBFromPydantic
+
 # If you have any utility functions or classes, import them here
-from .users import UserDetails, Language, UserLanguage, User, Activity, UserMedicalDetails
+from .users import (
+    Activity,
+    Language,
+    User,
+    UserDetails,
+    UserLanguage,
+    UserMedicalDetails,
+)
+from .weather import WeatherData
 
 __all__ = [
     # Base and utility classes
@@ -17,5 +27,6 @@ __all__ = [
     "UserLanguage",
     "Activity",
     "UserMedicalDetails",
-
+    # Weather-related models
+    "WeatherData",
 ]
