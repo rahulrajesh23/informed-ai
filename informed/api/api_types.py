@@ -98,7 +98,7 @@ class UserDetailsResponse(BaseModel):
 
 
 class HealthCondition(BaseModel):
-    id: int | None = None
+    id: UUID | None = None
     condition: str
     severity: str
     description: str
@@ -112,7 +112,7 @@ class Medication(BaseModel):
 
 
 class WeatherSensitivity(BaseModel):
-    id: int | None = None
+    id: UUID | None = None
     type: str
     description: str
 

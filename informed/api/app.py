@@ -16,6 +16,8 @@ from informed.config import Config
 from informed.db import init_db
 from informed.helper.utils import get_concise_exception_traceback
 
+import redis
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[Any, Any]:
@@ -23,9 +25,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[Any, Any]:
         # Startup logic
         log.info("Initializing resources...")
         # Add any initialization code here
-
-        executor = ThreadPoolExecutor(max_workers=4)
-        app.state.executor = executor
 
         yield
     finally:
@@ -47,6 +46,12 @@ def create_app(config: Config) -> FastAPI:
     # app.mount("/files", StaticFiles(directory="static"), name="static")
     app.state.config = config
     app.state.version = os.getenv("APP_VERSION")
+
+    redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+    app.state.redis_client = redis_client
+
+    executor = ThreadPoolExecutor(max_workers=4)
+    app.state.executor = executor
 
     # Initialize the job scheduler
 

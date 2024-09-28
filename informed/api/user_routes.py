@@ -7,8 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import ColumnElement, delete, select
 from sqlalchemy.exc import IntegrityError
 
-from backend.app.dependencies import redis_client
-from backend.app.services.user_services import get_current_user
+from informed.helper.utils import get_current_user
 from informed.api.api_types import (
     CreateUserRequest,
     LoginRequest,
@@ -286,7 +285,10 @@ async def set_medical_details(
 
 
 @user_router.post("/login")
-async def login(login_request: LoginRequest, response: Response) -> dict:
+async def login(
+    request: Request, login_request: LoginRequest, response: Response
+) -> dict:
+    redis_client = request.app.state.redis_client
     try:
         async with session_maker() as session:
             result = await session.execute(
@@ -332,6 +334,7 @@ async def read_users_me(
 @user_router.get("/logout")
 async def logout(request: Request, response: Response) -> dict:
     session_token = request.cookies.get("session_token")
+    redis_client = request.app.state.redis_client
     if session_token:
         redis_client.delete(session_token)
         response.delete_cookie("session_token")

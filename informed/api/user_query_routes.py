@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 from sqlalchemy import ColumnElement, select
 
-from backend.app.gptclient import generate_response
-from backend.app.services.user_services import get_current_user
-from backend.app.util import extract_user_info
+from informed.llm.client import generate_response
+from informed.helper.utils import get_current_user
+from informed.helper.util import extract_user_info
 from informed.api.api_types import GetQuestionAndFactsResponse, QuestionsRequest
 from informed.db import session_maker
 from informed.db_models.users import (
