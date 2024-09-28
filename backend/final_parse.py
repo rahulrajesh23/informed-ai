@@ -43,5 +43,6 @@ def main() -> None:
     save_to_json(processed_data, output_json_path)
     print(f"Output saved to {output_json_path}")
 
+
 if __name__ == "__main__":
     main()
