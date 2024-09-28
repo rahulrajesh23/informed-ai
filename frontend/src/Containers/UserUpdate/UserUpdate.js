@@ -17,13 +17,13 @@ const initialUserDetails = {
     phone_number: "",
     ethnicity: "",
     languages: [
-      { name: "Spanish", is_preferred: false },
-      { name: "English", is_preferred: true }
+      { name: "spanish", is_preferred: false },
+      { name: "english", is_preferred: true }
     ]
   }
 const languages =  [
-    { name: "Spanish", is_preferred: false },
-    { name: "English", is_preferred: true }
+    { name: "spanish", is_preferred: false },
+    { name: "english", is_preferred: true }
 ]
 
 const ethnicities = [
@@ -43,7 +43,7 @@ const states = [
     'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
     'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
 ];
-  
+
 
 const UserUpdate = ({ onChange }) => {
     const dispatch = useDispatch();

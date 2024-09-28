@@ -1,57 +1,62 @@
+import json
+import time
+from typing import Any
 import requests
 import schedule
-import time
-import json
 
 
-def get_weather_alerts(zone_id):
+def get_weather_alerts(zone_id: str) -> Any:
     """Fetch weather alerts using latitude and longitude."""
     url = f"https://api.weather.gov/alerts/active/zone/{zone_id}"
     response = requests.get(url).json()
 
-    if 'features' in response:
-        return response['features']
+    if "features" in response:
+        return response["features"]
     else:
         return []
 
 
-def extract_alert_info(alert_features=[]):
+def extract_alert_info(alert_features: list) -> list:
     # Compile pattern to extract sentences
-    allowed_keys = ['event', 'headline', 'description', 'instruction']
+    allowed_keys = ["event", "headline", "description", "instruction"]
     extracted_features = []
     for feature in alert_features:
-        filtered_alert_info = {key: feature['properties'][key] for key in allowed_keys if key in feature['properties']}
+        filtered_alert_info = {
+            key: feature["properties"][key]
+            for key in allowed_keys
+            if key in feature["properties"]
+        }
         extracted_features.append(filtered_alert_info)
     return extracted_features
 
-def storeAlertsInDB(zip, features):
-    url = f"http://localhost:8000/weather/add"
-    data = {
-    "zip_code": zip,
-    "weather_conditions": json.dumps(features)
-    }
+
+def storeAlertsInDB(zip: str, features: list) -> None:
+    url = "http://localhost:8000/weather/add"
+    data = {"zip_code": zip, "weather_conditions": json.dumps(features)}
 
     headers = {
-    'Content-Type': 'application/json',
-    'Cookie': 'session_token=86mnYqBfx_34Cuy2dqC1JVmr4Y6tzrryDpnXfsSQrug'
+        "Content-Type": "application/json",
+        "Cookie": "session_token=86mnYqBfx_34Cuy2dqC1JVmr4Y6tzrryDpnXfsSQrug",
     }
 
-    response = requests.post(url, json=data, headers=headers).json() 
+    response = requests.post(url, json=data, headers=headers).json()
 
-    # print(response)
+    print(response)
 
-def main(zip_zones):
+
+def main(zip_zones: dict) -> None:
     alerts_by_zip = {}
     for zip, zone in zip_zones.items():
 
         alert = get_weather_alerts(zone)
         extracted_features = extract_alert_info(alert)
         alerts_by_zip[zip] = extracted_features
-        if(len(extracted_features)>0):
+        if len(extracted_features) > 0:
             print(zip)
             storeAlertsInDB(zip, extracted_features)
 
     print("Alerts stored successfully.")
+
 
 zip_zones = {
     "92507": "CAZ065",
@@ -295,8 +300,8 @@ zip_zones = {
     "92883": "CAZ563",
 }
 
-file_path = 'zip_zone.json'
-with open(file_path, 'r') as json_file:
+file_path = "zip_zone.json"
+with open(file_path) as json_file:
     data = json.load(json_file)
 
 main(data)
