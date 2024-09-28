@@ -1,16 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends
 import asyncio
 from typing import Optional
-from app.core.models.weather_details import WeatherData
+# from app.core.models.weather_details import WeatherData
 
-from app.core.schemas.user_query_request import QuestionsRequest, GetQuestionAndFactsResponse
-from app.util import extract_alert_info, fetchAlerts, extract_user_info
-from app.config import logger
-from app.gptclient import generate_response
-from app.core.models.users import User, UserDetails, UserLanguage, Language, UserAllergies, UserHealthConditions, UserMedicalDetails, UserMedications
-from app.services.user_services import get_current_user
-from app.dependencies import db_dependency
-import json
+from informed.api.types import QuestionsRequest, GetQuestionAndFactsResponse
+from backend.app.util import extract_alert_info, fetchAlerts, extract_user_info
+from loguru import logger
+from backend.app.gptclient import generate_response
+from informed.db_models.users import User, UserDetails, UserLanguage, Language, UserAllergies, UserHealthConditions, UserMedicalDetails, UserMedications
+from backend.app.services.user_services import get_current_user
+from sqlalchemy import select, ColumnElement, delete
+from informed.db import session_maker
 
 # from dependencies import db_dependency
 user_query_router = APIRouter()
@@ -24,7 +24,7 @@ lock = asyncio.Lock()
 
 
 @user_query_router.post("/submit_question")
-async def submit_question(request: QuestionsRequest, db: db_dependency, current_user: User = Depends(get_current_user)):
+async def submit_question(request: QuestionsRequest, current_user: User = Depends(get_current_user)):
 
     # Check if the user exists
     user = current_user

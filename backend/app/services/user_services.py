@@ -1,36 +1,33 @@
-from fastapi import APIRouter, Depends, status, HTTPException, Request, Response, Cookie
-from sqlalchemy.orm import Session, selectinload, joinedload, subqueryload
+from fastapi import APIRouter, status, HTTPException, Cookie
+from sqlalchemy.future import select
 import json
-from app.dependencies import db_dependency, redis_client, get_db
-from app.core.models.users import User, UserDetails, UserLanguage, Language, UserAllergies, UserHealthConditions, UserMedicalDetails, UserMedications
-
-
-def get_current_user(session_token: str = Cookie(None), db: Session = Depends(get_db)):
+from backend.app.dependencies import redis_client
+from informed.db_models.users import User
+from informed.db import session_maker
+from typing import Any
+async def get_current_user(session_token: str = Cookie(None)):
     if session_token is None:
         return None
     
     serialized_session = redis_client.get(session_token)
-    session_object = json.loads(serialized_session)
-    if not session_object or not session_object["username"]:
+    if not serialized_session:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid session or expired session")
     
-    user = db.query(User).options(
-        # Load UserDetails
-        joinedload(User.details).options(
-            # Load languages through UserLanguage and join Language details
-            joinedload(UserDetails.languages).joinedload(UserLanguage.language),
-        ),
-        # Load UserMedicalDetails and nested HealthConditions
-        joinedload(User.medical_details).options(
-            joinedload(UserMedicalDetails.health_conditions),
-            joinedload(UserMedicalDetails.weather_sensitivities)
-        )
-    ).filter(User.username == session_object["username"]).one_or_none()
+    session_object = json.loads(serialized_session)
+    if not session_object or not session_object.get("username"):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid session data")
+    
+    try:
+        async with session_maker() as session:
+            result = await session.execute(
+                select(User).filter(User.username == session_object["username"])
+            )
+            user = result.unique().scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    return user
-
+        return user
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 user_router = APIRouter()

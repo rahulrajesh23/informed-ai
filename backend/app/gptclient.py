@@ -6,15 +6,16 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 from openai import AsyncOpenAI
-from app.config import logger, ENV_VARS
-import torch
-from selfcheckgpt.modeling_selfcheck import SelfCheckNLI
-from app.core.models.users import User
-from app.util import extract_user_info
+from loguru import logger
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device = torch.device('mps') if torch.backends.mps.is_available() else device
-selfcheck_nli = SelfCheckNLI(device=device)
+from backend.app.config import ENV_VARS
+# import torch
+# from selfcheckgpt.modeling_selfcheck import SelfCheckNLI
+from informed.db_models.users import User
+from backend.app.util import extract_user_info
+
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# selfcheck_nli = SelfCheckNLI(device=device)
 
 GPT_APIKEY = ENV_VARS["GPT_APIKEY"]
 GPT_MODEL_NAME = ENV_VARS["GPT_MODEL_NAME"]
@@ -132,18 +133,15 @@ async def generate_response(query='', alerts = [], user_info='', num_samples=3, 
             except json.JSONDecodeError as e:
                 logger.error(f"JSON decode error for GPT response {i+1}: {e}")
             
+        # TODO: Temp commented out
+        # sent_scores_nli = selfcheck_nli.predict(
+        #     sentences = sentences,      # list of sentences from primary GPT response
+        #     sampled_passages = samples, # list of passages from sampled GPT responses
+        # )
+        # sent_scores_nli = await asyncio.to_thread(selfcheck_nli.predict, sentences, samples) # - used later
+        # contradiction_score = sum(sent_scores_nli) / len(sent_scores_nli)
 
-        print("temp before self check")
-        # Run the predict method in a separate thread to avoid blocking
-        # loop = asyncio.get_event_loop()
-        # sent_scores_nli = await loop.run_in_executor(executor, selfcheck_nli.predict, sentences, samples)
-        sent_scores_nli = await asyncio.to_thread(selfcheck_nli.predict, sentences, samples)
-
-
-        print("temp after self check")
-        
-        contradiction_score = sum(sent_scores_nli) / len(sent_scores_nli)
-
+        contradiction_score = 0
         logger.info(f"Overall Contradiction: {contradiction_score}")
         if contradiction_score < contradiction_threshold:
             response = { "facts" : sentences }
