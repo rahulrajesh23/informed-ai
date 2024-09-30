@@ -17,7 +17,7 @@ from informed.db_models.users import (
 from informed.db_models.weather import WeatherData
 
 # from dependencies import db_dependency
-user_query_router = APIRouter()
+chat_query_router = APIRouter()
 
 # TODO: Move to Session Store
 current_task: asyncio.Task | None = None  # Reference to the current processing task
@@ -27,7 +27,7 @@ processing_data: dict[str, Any] = {}
 lock = asyncio.Lock()
 
 
-@user_query_router.post("/submit_question")
+@chat_query_router.post("/submit_question")
 async def submit_question(
     request: QuestionsRequest, current_user: User = Depends(get_current_user)
 ) -> dict:
@@ -88,7 +88,7 @@ async def submit_question(
     return {"status": "processing"}
 
 
-@user_query_router.get(
+@chat_query_router.get(
     "/get_question_and_facts", response_model=GetQuestionAndFactsResponse
 )
 async def get_question_and_facts(

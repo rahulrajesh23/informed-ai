@@ -9,9 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger as log
 
-from informed.api.user_query_routes import user_query_router
-from informed.api.user_routes import user_router
-from informed.api.weather_data_routes import weather_router
+from informed.api.chat_query import chat_query_router
+from informed.api.user import user_router
+from informed.api.weather import weather_router
 from informed.config import Config
 from informed.db import init_db
 from informed.helper.utils import get_concise_exception_traceback
@@ -66,10 +66,9 @@ def create_app(config: Config) -> FastAPI:
 
     api_v1_router = APIRouter()
     api_v1_router.include_router(user_router, prefix="/user", tags=["users"])
-    api_v1_router.include_router(user_query_router, prefix="/query", tags=["query"])
+    api_v1_router.include_router(chat_query_router, prefix="/query", tags=["query"])
     api_v1_router.include_router(weather_router, prefix="/weather", tags=["weather"])
 
-    # TODO: Frontend needs to update api version in its path
     app.include_router(api_v1_router, prefix="/api/v1")
 
     app.add_exception_handler(HTTPException, http_exception_handler)

@@ -30,10 +30,28 @@ from informed.db_models.users import (
 user_router = APIRouter()
 
 
+def set_session_cookie(
+    request: Request, response: Response, session_object: dict
+) -> None:
+    redis_client = request.app.state.redis_client
+    session_token = secrets.token_urlsafe()
+    serialized_session = json.dumps(session_object)
+    redis_client.set(session_token, serialized_session, ex=3600)
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+    )
+
+
 @user_router.post(
     "/register", response_model=CreateUserRequest, status_code=status.HTTP_201_CREATED
 )
-async def register_user(user: CreateUserRequest, request: Request) -> CreateUserRequest:
+async def register_user(
+    user: CreateUserRequest, request: Request, response: Response
+) -> CreateUserRequest:
     try:
         async with session_maker() as session:
             # Check if user with the same username or email already exists
@@ -59,6 +77,8 @@ async def register_user(user: CreateUserRequest, request: Request) -> CreateUser
             session.add(new_user)
             try:
                 await session.commit()
+                session_object = {"username": user.username, "role": "admin"}
+                set_session_cookie(request, response, session_object)
                 return CreateUserRequest(
                     username=new_user.username, email=new_user.email
                 )
@@ -288,7 +308,7 @@ async def set_medical_details(
 async def login(
     request: Request, login_request: LoginRequest, response: Response
 ) -> dict:
-    redis_client = request.app.state.redis_client
+
     try:
         async with session_maker() as session:
             result = await session.execute(
@@ -298,19 +318,8 @@ async def login(
             )
             db_user = result.unique().scalar_one_or_none()
             if db_user:
-                session_token = secrets.token_urlsafe()
                 session_object = {"username": login_request.username, "role": "admin"}
-                serialized_session = json.dumps(session_object)
-                redis_client.set(
-                    session_token, serialized_session, ex=3600
-                )  # Store session with 1-hour expiration
-                response.set_cookie(
-                    key="session_token",
-                    value=session_token,
-                    httponly=True,
-                    secure=True,
-                    samesite="lax",
-                )
+                set_session_cookie(request, response, session_object)
                 return {"data": db_user, "message": "Login Successful"}
             else:
                 raise HTTPException(
@@ -324,11 +333,14 @@ async def login(
 async def read_users_me(
     request: Request, current_user: User = Depends(get_current_user)
 ) -> dict:
-    return {
-        "data": current_user,
-        "sessionAlive": True,
-        "message": "Login Successful",
-    }
+    try:
+        return {
+            "data": current_user,
+            "sessionAlive": True,
+            "message": "Login Successful",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e!s}")
 
 
 @user_router.get("/logout")
@@ -337,6 +349,6 @@ async def logout(request: Request, response: Response) -> dict:
     redis_client = request.app.state.redis_client
     if session_token:
         redis_client.delete(session_token)
-        response.delete_cookie("session_token")
+        # response.delete_cookie("session_token")
         return {"message": "Logged out"}
     raise HTTPException(status_code=400, detail="No active session found")

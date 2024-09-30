@@ -11,8 +11,6 @@ from informed.db_models.users import User
 
 async def get_current_user(request: Request, session_token: str = Cookie(None)) -> User:
     redis_client = request.app.state.redis_client
-    if session_token is None:
-        return None
 
     serialized_session = redis_client.get(session_token)
     if not serialized_session:
