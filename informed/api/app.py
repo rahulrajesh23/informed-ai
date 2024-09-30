@@ -15,7 +15,7 @@ from informed.api.weather import weather_router
 from informed.config import Config
 from informed.db import init_db
 from informed.helper.utils import get_concise_exception_traceback
-
+from informed.informed import InformedManager
 import redis
 
 
@@ -27,14 +27,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[Any, Any]:
         # Add any initialization code here
 
         yield
-    finally:
-        # Shutdown logic
-        log.info("Shutting down resources...")
-        # Close the executor if it exists
+
+        await app.state.app_manager.cancel_all_tasks()
         if hasattr(app.state, "executor"):
             app.state.executor.shutdown(wait=True)
-            log.info("Executor has been shut down")
-        # Add any other cleanup code here
+        log.info("Executor has been shut down")
+    except Exception as e:
+        log.exception(e)
+        raise e
 
 
 def create_app(config: Config) -> FastAPI:
@@ -52,6 +52,9 @@ def create_app(config: Config) -> FastAPI:
 
     executor = ThreadPoolExecutor(max_workers=4)
     app.state.executor = executor
+
+    app_manager = InformedManager(config)
+    app.state.app_manager = app_manager
 
     # Initialize the job scheduler
 

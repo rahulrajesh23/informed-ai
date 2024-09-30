@@ -7,6 +7,7 @@ from loguru import logger
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 from informed.config import ENV_VARS
+from informed.db_models.query import QuerySource
 
 # import torch
 # from selfcheckgpt.modeling_selfcheck import SelfCheckNLI
@@ -39,8 +40,8 @@ class GPTConfig(BaseModel):
 
 class GeneratedResponse(BaseModel):
     status: str
-    facts: list[str]
-    source: str
+    findings: list[str] = []
+    source: QuerySource | None = None
 
 
 # Code snippet borrowed from : https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken
@@ -117,7 +118,7 @@ async def generate_response(
     messages = [
         {
             "role": "system",
-            "content": "You are a highly skilled AI tasked with analyzing Weather alerts and giving users advice based on their health details and preferences in json format. Given a user's question, their details, and weather info, your role involves identifying the most reasonable advice to give them about their query. If no answers are possible for the question-query, simply return empty array of facts'. Example= Query: What's the Weather like? Can I go for a walk? Response: {'facts':['The weather is good','The temperature is 38 C', 'Perfect weather for a walk']}. Try to answer in their preferred language of choice. If not available, English works",
+            "content": "You are a highly skilled AI tasked with analyzing Weather alerts and giving users advice based on their health details and preferences in json format. Given a user's question, their details, and weather info, your role involves identifying the most reasonable advice to give them about their query. If no answers are possible for the question-query, simply return empty array of findings'. Example= Query: What's the Weather like? Can I go for a walk? Response: {'findings':['The weather is good','The temperature is 38 C', 'Perfect weather for a walk']}. Try to answer in their preferred language of choice. If not available, English works",
         },
         {
             "role": "user",
@@ -133,10 +134,9 @@ async def generate_response(
         ):  # To control the input text size
             return GeneratedResponse(
                 status="done",
-                facts=[
+                findings=[
                     "Sorry, that's too much text for me to process. Can you reduce the number of attached files and try again?"
                 ],
-                source="",
             )
 
         sentences = []
@@ -162,16 +162,16 @@ async def generate_response(
             try:
                 sample_response = json.loads(result)
                 if (
-                    "facts" in sample_response
-                    and isinstance(sample_response["facts"], list)
-                    and len(sample_response["facts"]) > 0
+                    "findings" in sample_response
+                    and isinstance(sample_response["findings"], list)
+                    and len(sample_response["findings"]) > 0
                 ):
                     if i == 0:
                         # Main Response
-                        sentences = sample_response["facts"]
+                        sentences = sample_response["findings"]
                     else:
                         # Sampled Responses
-                        samples.append(".".join(sample_response["facts"]))
+                        samples.append(".".join(sample_response["findings"]))
             except json.JSONDecodeError as e:
                 logger.error(f"JSON decode error for GPT response {i+1}: {e}")
 
@@ -187,22 +187,23 @@ async def generate_response(
         logger.info(f"Overall Contradiction: {contradiction_score}")
         if contradiction_score < contradiction_threshold:
             response = GeneratedResponse(
-                facts=sentences, status="success", source="https://api.weather.gov"
+                findings=sentences,
+                status="success",
+                source=QuerySource(source="https://api.weather.gov"),
             )
             return response
         else:
             return GeneratedResponse(
-                facts=["Sorry, I cant answer your question"], status="done", source=""
+                findings=["Sorry, I cant answer your question"], status="done"
             )
 
     except Exception as e:
         logger.error(e)
         return GeneratedResponse(
-            facts=[
+            findings=[
                 "Sorry, I'm having some trouble answering your question. Please contact support"
             ],
             status="done",
-            source="",
         )
 
 
