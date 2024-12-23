@@ -39,6 +39,7 @@ ui:
     name: gcr.io/informed-ai-prod/informed-ui
     tag: latest
 
+
 hostname: "informed-ai.org"
 
 ingress:
@@ -48,7 +49,7 @@ ingress:
     kubernetes.io/ingress.class: gce
     kubernetes.io/ingress.allow-http: "false"
     kubernetes.io/ingress.global-static-ip-name: "informed-app-static-ip"
-    kubernetes.io/ingress.backend-protocol: HTTPS
+    kubernetes.io/ingress.backend-protocol: HTTP
     networking.gke.io/managed-certificates: informed-cert
 
 certmanager:

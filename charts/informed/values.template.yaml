@@ -187,6 +187,8 @@ redis:
       cpu: 50m
       memory: 64Mi
 
+google:
+  apiKey: "$GOOGLE_API_KEY"
 
 llm:
   openai:

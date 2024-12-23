@@ -1,7 +1,7 @@
 export const Constants = {
     "apis" : {
-        "addUserMessage" : "api/v1/chat/",
-        "getChatThread" : "api/v1/chat/",
+        "addUserMessage" : "api/v1/chat",
+        "getChatThread" : "api/v1/chat",
         "register" : "api/v1/user/register",
         "login" : "api/v1/user/login",
         "logout" : "api/v1/user/logout",

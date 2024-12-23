@@ -15,7 +15,7 @@ export const addUserMessage = (message, chatThreadID=null, responseType="text") 
             requested_response_type: responseType
         }
         if(chatThreadID) {
-            apiUrl = apiUrl + chatThreadID
+            apiUrl = apiUrl + "/" + chatThreadID
             payload["chat_thread_id"] = chatThreadID
         }
         apiClient.post(apiUrl, payload)
@@ -39,7 +39,7 @@ export const getChatThread = (chatThreadId) => dispatch => {
         return;
     }
     dispatch(chatActions.chatAgentPollRequest());
-    apiClient.get(api_urls.getChatThread + chatThreadId)
+    apiClient.get(api_urls.getChatThread + "/" + chatThreadId)
         .then(response => {
             const data = response.data
             if (data.error) {
