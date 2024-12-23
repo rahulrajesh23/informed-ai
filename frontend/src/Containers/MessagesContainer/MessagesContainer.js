@@ -1,23 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Loader } from '../../Components/Loader';
 import { SupportAgent } from '@mui/icons-material';
+import apiClient from '../../store/apiClient';
 
 import styles from './MessagesContainer.module.css';
 
-const AudioPlayer = ({ queryId }) => {
+const AudioPlayer = ({ messageId }) => {
     const [audioUrl, setAudioUrl] = useState(null);
 
     useEffect(() => {
         const fetchAudio = async () => {
             try {
-                const response = await fetch(`/api/v1/query/tts/${queryId}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const audioData = await response.blob();
-                // Create blob with explicit MIME type
-                const audioBlob = new Blob([audioData], { type: 'audio/mpeg' });
-                const url = URL.createObjectURL(audioBlob);
+                const response = await apiClient.blob(`/api/v1/chat/tts/${messageId}`);
+                const url = URL.createObjectURL(response.data);
                 setAudioUrl(url);
             } catch (error) {
                 console.error('Error fetching audio:', error);
@@ -31,15 +26,10 @@ const AudioPlayer = ({ queryId }) => {
                 URL.revokeObjectURL(audioUrl);
             }
         };
-    }, [queryId]);
+    }, [messageId]);
 
     return audioUrl ? (
-        <audio
-            controls
-            className={styles.audioPlayer}
-            src={audioUrl}
-            type="audio/mpeg"
-        >
+        <audio controls className={styles.audioPlayer} src={audioUrl}>
             Your browser does not support the audio element.
         </audio>
     ) : (
@@ -73,8 +63,8 @@ export function MessagesContainer(props) {
                                         </div>
                                         <span className={styles.agentTitle}>Assistant</span>
                                     </div>
-                                    {(message.response_type || 'text') === 'voice' ? (
-                                        <AudioPlayer queryId={message.queryId} />
+                                    {(message.response_type || 'text') === 'audio' ? (
+                                        <AudioPlayer messageId={message.message_id} />
                                     ) : (
                                         <>
                                             <p>{message.content}</p>

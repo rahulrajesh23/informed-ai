@@ -55,6 +55,10 @@ class ChatManager(ABC):
     async def update_message(self, message: Message) -> None:
         pass
 
+    @abstractmethod
+    async def get_message(self, message_id: UUID) -> Message | None:
+        pass
+
 
 class DBChatManager(ChatManager):
     def __init__(self) -> None:
@@ -130,6 +134,11 @@ class DBChatManager(ChatManager):
                 )
             )
             return result.unique().scalars().first()
+
+    async def get_message(self, message_id: UUID) -> Message | None:
+        async with session_maker() as session:
+            result = await session.get(Message, message_id)
+            return result
 
     async def get_all_chat_threads(self) -> list[ChatThread]:
         async with session_maker() as session:
