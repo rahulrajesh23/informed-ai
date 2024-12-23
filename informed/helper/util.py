@@ -14,8 +14,8 @@ from typing import Any, Optional
 from loguru import logger as log
 from sqlalchemy import select
 from informed.db import session_maker
-from informed.db_models.notifications import WeatherNotification
-from informed.services.notification_service import NotificationService
+from informed.db_models.weather_alert import WeatherAlert
+from informed.services.weather_alert_service import WeatherAlertService
 
 APP_ENV = os.getenv("APP_ENV", "DEV")
 
@@ -32,20 +32,22 @@ zone_zip_map = {
 def build_system_prompt() -> str:
     system_prompt = dedent(
         f"""
-        You are a highly skilled AI weather advisor with expertise in analyzing weather conditions and providing personalized advice.
+        You are a highly skilled personal assistant that helps answers user questions.
+        Your main purpose is to help the user with questions about the weather, air quality, and health,
+        but you can also answer other questions as long as they have something to do with the user.
 
         Your role:
-        - Analyze current weather conditions and forecasts
-        - Provide personalized recommendations based on user health details and preferences
-        - Consider air quality, temperature, and other weather factors when giving advice
+        - Provide personalized responses, using the provided context if available
         - Respond in the user's preferred language when specified
+
 
         Guidelines for responses:
         - Be clear, concise, and friendly
         - Prioritize user safety and health considerations
-        - Provide specific, actionable advice
-        - If weather data is unavailable, acknowledge limitations in your response
-        - Always use provided tools if available
+        - If required context is unavailable, acknowledge limitations in your response
+        - If context is irrelevant to the user's question, ignore it
+        - Pay close attention to any instructions provided
+        - ALWAYS use provided tools. You should NEVER respond without using the provided tools.
 
 
         Example response:
@@ -325,7 +327,7 @@ def build_air_quality_context(
 async def build_weather_query_context(
     user: User,
     weather_sources_config: WeatherSourcesConfig,
-    notification_service: NotificationService,
+    weather_alert_service: WeatherAlertService,
 ) -> str:
     if not user.details or not user.details.zip_code:
         raise ValueError("User details or zip code not found")
@@ -335,8 +337,8 @@ async def build_weather_query_context(
         weather_sources_config, zip_code=user.details.zip_code
     )
 
-    # Get active notifications from Redis
-    notifications = await notification_service.get_active_notifications(
+    # Get active weather alerts from Redis
+    weather_alerts = await weather_alert_service.get_active_weather_alerts(
         user.details.zip_code
     )
 
@@ -388,13 +390,11 @@ async def build_weather_query_context(
     # Add air quality context
     context += build_air_quality_context(air_quality_data, source="airnow")
 
-    # Add notifications to context if any exist
-    if notifications:
-        context += "\nActive Weather Notifications:\n"
-        for notification in notifications:
-            context += (
-                f"- {notification['message']} (expires: {notification['expires_at']})\n"
-            )
+    # Add weather alerts to context if any exist
+    if weather_alerts:
+        context += "\nActive Weather Alerts:\n"
+        for weather_alert in weather_alerts:
+            context += f"- {weather_alert['message']} (expires: {weather_alert['expires_at']})\n"
 
     return context
 

@@ -50,8 +50,8 @@ def upgrade() -> None:
         op.f("ix_weather_data_zip_code"), "weather_data", ["zip_code"], unique=False
     )
     op.create_table(
-        "weather_notifications",
-        sa.Column("id", sa.Uuid(), nullable=False),
+        "weather_alerts",
+        sa.Column("weather_alert_id", sa.Uuid(), nullable=False),
         sa.Column("zip_code", sa.String(length=20), nullable=False),
         sa.Column("message", sa.Text(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
@@ -59,11 +59,11 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("cancelled_at", sa.DateTime(timezone=True), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("weather_alert_id"),
     )
     op.create_index(
-        op.f("ix_weather_notifications_zip_code"),
-        "weather_notifications",
+        op.f("ix_weather_alerts_zip_code"),
+        "weather_alerts",
         ["zip_code"],
         unique=False,
     )
@@ -137,14 +137,17 @@ def upgrade() -> None:
         sa.Column("chat_thread_id", sa.Uuid(), nullable=False),
         sa.Column("source", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column(
-            "presentation_type", sqlmodel.sql.sqltypes.AutoString(), nullable=True
+            "language",
+            sqlmodel.sql.sqltypes.AutoString(),
+            nullable=True,
         ),
+        sa.Column("response_type", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("user_id", sa.Uuid(), nullable=True),
         sa.Column("query_id", sa.Uuid(), nullable=True),
         sa.Column("acknowledged", sa.Boolean(), nullable=False),
         sa.Column(
             "requested_response_type",
-            sa.Enum("TEXT", "TEXT_SHORT", "AUDIO", name="messagepresentationtype"),
+            sqlmodel.sql.sqltypes.AutoString(),
             nullable=True,
         ),
         sa.ForeignKeyConstraint(
@@ -217,10 +220,8 @@ def downgrade() -> None:
     op.drop_table("user_details")
     op.drop_table("queries")
     op.drop_table("chat_thread")
-    op.drop_index(
-        op.f("ix_weather_notifications_zip_code"), table_name="weather_notifications"
-    )
-    op.drop_table("weather_notifications")
+    op.drop_index(op.f("ix_weather_alerts_zip_code"), table_name="weather_alerts")
+    op.drop_table("weather_alerts")
     op.drop_index(op.f("ix_weather_data_zip_code"), table_name="weather_data")
     op.drop_table("weather_data")
     op.drop_table("users")

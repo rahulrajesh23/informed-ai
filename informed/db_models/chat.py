@@ -10,6 +10,7 @@ from sqlalchemy.types import String
 
 from sqlalchemy.dialects.postgresql import JSONB
 from informed.db_models.shared_types import EnumAsString, JSONBFromPydantic
+from informed.db_models.users import Language
 import time
 from enum import Enum
 from uuid import UUID, uuid4
@@ -22,9 +23,9 @@ from sqlalchemy.types import Uuid as SQLAlchemyUuid
 from sqlmodel import Boolean, Column, Field, Relationship, SQLModel, ForeignKey
 
 
-class MessagePresentationType(Enum):
+class MessageResponseType(Enum):
     TEXT = "text"
-    TEXT_SHORT = "text_short"
+    TEXT_MESSAGE = "text_message"
     AUDIO = "audio"
 
 
@@ -46,9 +47,9 @@ class BaseMessage(SQLModel):
         )
     )
     source: MessageSource = Field(sa_column=Column(EnumAsString(MessageSource)))
-    presentation_type: MessagePresentationType = Field(
-        sa_column=Column(EnumAsString(MessagePresentationType)),
-        default=MessagePresentationType.TEXT,
+    response_type: MessageResponseType = Field(
+        sa_column=Column(EnumAsString(MessageResponseType)),
+        default=MessageResponseType.TEXT,
     )
 
 
@@ -56,8 +57,8 @@ class UserMessage(BaseMessage):
     user_id: UUID | None = Field(default=None)
     source: MessageSource = Field(default=MessageSource.WEBAPP)
     acknowledged: bool = Field(default=False)
-    requested_response_type: MessagePresentationType | None = Field(
-        default=MessagePresentationType.TEXT
+    requested_response_type: MessageResponseType | None = Field(
+        default=MessageResponseType.TEXT
     )
 
     def is_pending(self) -> bool:
@@ -66,6 +67,7 @@ class UserMessage(BaseMessage):
 
 class AssistantMessage(BaseMessage):
     query_id: UUID | None = Field(default=None)
+    language: Language = Field(default=Language.ENGLISH)
     source: MessageSource = Field(default=MessageSource.ASSISTANT)
 
 
@@ -73,8 +75,9 @@ class Message(BaseMessage, table=True):
     user_id: UUID | None = Field(default=None)
     query_id: UUID | None = Field(default=None)
     acknowledged: bool = Field(default=False)
-    requested_response_type: MessagePresentationType | None = Field(default=None)
+    requested_response_type: MessageResponseType | None = Field(default=None)
     chat_thread: "ChatThread" = Relationship(back_populates="messages")
+    language: Language = Field(default=Language.ENGLISH)
 
 
 class ChatThread(SQLModel, table=True):

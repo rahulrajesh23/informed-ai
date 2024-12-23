@@ -17,7 +17,7 @@ from informed.db_models.query import QueryState, Query, QuerySource
 from informed.db_models.chat import (
     Message,
     MessageSource,
-    MessagePresentationType,
+    MessageResponseType,
     ChatThread,
 )
 
@@ -251,7 +251,7 @@ class QueryRequest(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     source: MessageSource = MessageSource.WEBAPP
-    requested_response_type: MessagePresentationType | None = None
+    requested_response_type: MessageResponseType | None = None
 
     def user_message(self, user_id: UUID | None, chat_thread_id: UUID) -> Message:
         return Message(
@@ -272,11 +272,13 @@ class ChatMessageResponse(BaseModel):
     content: str
     created_at: datetime
     source: MessageSource
-    presentation_type: MessagePresentationType | None = None
-    user_id: UUID | None = None
+    response_type: MessageResponseType | None = None
     query_id: UUID | None = None
-    acknowledged: bool = False
-    requested_response_type: MessagePresentationType | None = None
+
+    # Hiding these from the response until we need them
+    # user_id: UUID | None = None
+    # acknowledged: bool = False
+    # requested_response_type: MessagePresentationType | None = None
 
     @classmethod
     def from_chat_message(cls, message: Message) -> "ChatMessageResponse":

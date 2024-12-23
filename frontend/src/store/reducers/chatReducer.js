@@ -6,7 +6,6 @@ const initialState = {
   isLoading: false,
   isQuestionLoading: false,
   currentChatThreadId: null,
-  isAgentRequestLoading: false,
   waitingForResponse: false,
   messages: []
 };
@@ -29,23 +28,26 @@ function chatReducer(state = initialState, action) {
         case actionTypes.CHAT_USER_MESSAGE_FAILURE:
             return { ...state, isLoading: false, error: action.payload };
         case actionTypes.CHAT_AGENT_POLL_REQUEST:
-            return { ...state, isAgentRequestLoading: true, error: null };
+            return { ...state, error: null };
         case actionTypes.CHAT_AGENT_POLL_SUCCESS:
-            return {
-                ...state,
-                messages: action.messages,
-                currentChatThreadId: action.chat_thread_id,
-                isAgentRequestLoading: false,
-                waitingForResponse: false,
-                error: null
+            if (Array.isArray(action.messages) && action.messages.length > state.messages.length) {
+                return {
+                    ...state,
+                    messages: action.messages,
+                    currentChatThreadId: action.chat_thread_id,
+                    waitingForResponse: false,
+                    error: null
+                }
             }
-            // let messages = state.messages
-            // if(state.waitingForResponse)
-            //     messages = [...messages, { type: 'response', answer: action.answer, queryId : action.query_id, responseMode: action.response_mode || 'text', sources: action.sources }]
-            // return { ...state, isAgentRequestLoading: false, waitingForResponse: false, messages: messages, error: null };
+            return state;
         case actionTypes.CHAT_AGENT_POLL_FAILURE:
-            return { ...state, isAgentRequestLoading: false, waitingForResponse: false, error: action.payload };
+            return { ...state, waitingForResponse: false, error: action.payload };
 
+        case actionTypes.SET_CURRENT_CHAT_THREAD_ID:
+            if(!action.chatThreadId) {
+                return { ...state, currentChatThreadId: null, waitingForResponse: false, messages: [] };
+            }
+            return { ...state, currentChatThreadId: action.chatThreadId, waitingForResponse: true };
         case actionTypes.LOGOUT_SUCCESS:
             return { ...state, messages: [] };
         default:

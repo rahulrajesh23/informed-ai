@@ -25,20 +25,10 @@ from textwrap import dedent
 from datetime import datetime, UTC
 from informed.llm.llm import ChatState
 from informed.users.manager import UserManager
-from informed.services.notification_service import NotificationService
-
-# TODO: Need to modularize this
-# 1. Add more sources
-# 2. Add more tools (if use case exists where we need to iterate on initial agent response)
-# 3. Split into pre-process: apis + query relevance (knowledge source)
-# 4. Post-process: answer formatting
-
-# TODO: Move data models to separate file
-# TODO: Move system prompt to top level file, add to system context in sub-agents
-# TODO: Move each API Tool to separate file
+from informed.services.weather_alert_service import WeatherAlertService
 
 
-class WeatherResponse(BaseModel):
+class QueryResponse(BaseModel):
     answer: str = ""
 
 
@@ -50,14 +40,16 @@ class QueryAgent:
         user_manager: UserManager,
         llm_client: LLMClient,
         weather_sources_config: WeatherSourcesConfig,
-        notification_service: NotificationService,
+        weather_alert_service: WeatherAlertService,
+        instructions: str | None = None,
     ):
         self.query_id = query_id
         self.query_manager = query_manager
         self.user_manager = user_manager
         self.llm_client = llm_client
         self.weather_sources_config = weather_sources_config
-        self.notification_service = notification_service
+        self.weather_alert_service = weather_alert_service
+        self.instructions = instructions
 
     async def run(self) -> None:
         query = await self.query_manager.get_query(self.query_id)
@@ -80,25 +72,33 @@ class QueryAgent:
             context = await build_weather_query_context(
                 user,
                 weather_sources_config=self.weather_sources_config,
-                notification_service=self.notification_service,
+                weather_alert_service=self.weather_alert_service,
             )
             user_prompt = dedent(
                 f"""
-                <query>
-                {query.query}
-                </query>
                 <context>
                 {context}
                 </context>
                 <user>
                 {user_info}
                 </user>
+                <user_message>
+                {query.query}
+                </user_message>
                 """
             )
+            if self.instructions:
+                user_prompt += f"\n<instructions>{self.instructions}</instructions>"
             chat_state = ChatState(system_prompt=system_prompt, user_prompt=user_prompt)
             output_schema = build_function_schema(
-                WeatherResponse,
-                description="Answer the user's question about the weather",
+                QueryResponse,
+                description="""
+                Function to provide the response to the user's question.
+                All assistant responses must be passed through this tool.
+
+                Args:
+                    answer (str): The assistant's response to the user's question
+                """,
             )
             try:
 
@@ -106,9 +106,9 @@ class QueryAgent:
                     chat_state, tools=[output_schema]
                 )
                 data = json.loads(function.arguments)
-                weather_response = WeatherResponse.model_validate(data)
+                weather_response = QueryResponse.model_validate(data)
 
-                if isinstance(weather_response, WeatherResponse):
+                if isinstance(weather_response, QueryResponse):
                     log.info(f"GPT Response: {weather_response.model_dump_json()}")
                     query.state = QueryState.COMPLETED
                     query.answer = weather_response.answer

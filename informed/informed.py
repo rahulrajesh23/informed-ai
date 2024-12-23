@@ -14,7 +14,7 @@ from typing import cast
 from informed.db_models.users import User
 from fastapi import HTTPException, status
 from informed.users.manager import UserManager
-from informed.services.notification_service import NotificationService
+from informed.services.weather_alert_service import WeatherAlertService
 from redis.asyncio import Redis
 from informed.chat.manager import DBChatManager
 from informed.agents.chat_agent.chat_agent import ChatAgent
@@ -27,7 +27,7 @@ class InformedManager:
         self.config = config
         self.user_manager = UserManager(config)
         self.llm_client = llm_client
-        self.notification_service = NotificationService(config, redis_client)
+        self.weather_alert_service = WeatherAlertService(config, redis_client)
         self.query_manager = QueryManager()
         self.chat_manager = DBChatManager()
         self._lock_var: ContextVar[asyncio.Lock] = ContextVar("lock_var")
@@ -87,7 +87,7 @@ class InformedManager:
     async def _start_query(self, query: Query) -> QueryResponse:
         initial_query_state = query.state
         query_id = query.query_id
-        timeout = 10  # TODO: Make this configurable
+        timeout = 20  # TODO: Make this configurable
 
         # Cancel all tasks for the user since we only process last query
         await self.cancel_user_tasks(query.user_id)
@@ -118,7 +118,7 @@ class InformedManager:
             user_manager=self.user_manager,
             llm_client=self.llm_client,
             weather_sources_config=self.config.weather_sources_config,
-            notification_service=self.notification_service,
+            weather_alert_service=self.weather_alert_service,
         )
         query_task = asyncio.create_task(query_agent.run())
         # self._query_tasks[query_id] = query_task
@@ -210,7 +210,7 @@ class InformedManager:
             chat_manager=self.chat_manager,
             llm_client=self.llm_client,
             weather_sources_config=self.config.weather_sources_config,
-            notification_service=self.notification_service,
+            weather_alert_service=self.weather_alert_service,
             chat_termination_callback=termination_callback,
         )
         self._chat_agents[chat_thread_id] = chat_agent

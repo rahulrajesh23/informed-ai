@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Loader } from '../../Components/Loader';
+import { SupportAgent } from '@mui/icons-material';
 
 import styles from './MessagesContainer.module.css';
 
@@ -55,35 +56,28 @@ export function MessagesContainer(props) {
         <div className={styles.messagesContainer}>
                 {messages.map((message, index) => {
                     if(message) {
-                        if(message.type == "query") {
+                        if(message.source === "webapp") {
                             return (
                                 <div key={index} className={`${styles.message} ${styles.user}`}>
-                                    <strong>Question:</strong>
-                                    <p>{message.query}</p>
+                                    <p>{message.content}</p>
                                 </div>
                             )
                         }
-                        else if (message.type == "response" && message.answer) {
+                        else if (message.source === "assistant" && message.content) {
 
                             return (
                                 <div key={index} className={`${styles.message} ${styles.agent}`}>
-                                    <strong>Response:</strong>
-                                    {(message.responseMode || 'text') === 'voice' ? (
+                                    <div className={styles.messageHeader}>
+                                        <div className={styles.agentIcon}>
+                                            <SupportAgent />
+                                        </div>
+                                        <span className={styles.agentTitle}>Assistant</span>
+                                    </div>
+                                    {(message.response_type || 'text') === 'voice' ? (
                                         <AudioPlayer queryId={message.queryId} />
                                     ) : (
                                         <>
-                                            <p>{message.answer}</p>
-                                            {message.sources && Array.isArray(message.sources) && message.sources.length > 0 && (
-                                                <p>
-                                                    <strong>Source: </strong>
-                                                    {message.sources.map((source, sourceIndex) => (
-                                                        <React.Fragment key={sourceIndex}>
-                                                            {sourceIndex > 0 && ', '}
-                                                            <a style={{'cursor': 'pointer'}} href={source.source}>{source.source}</a>
-                                                        </React.Fragment>
-                                                    ))}
-                                                </p>
-                                            )}
+                                            <p>{message.content}</p>
                                         </>
                                     )}
                                 </div>

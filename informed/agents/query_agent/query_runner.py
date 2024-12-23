@@ -15,7 +15,7 @@ from informed.db_models.query import (
 
 from informed.llm.client import LLMClient
 from informed.config import WeatherSourcesConfig
-from informed.services.notification_service import NotificationService
+from informed.services.weather_alert_service import WeatherAlertService
 from informed.users.manager import UserManager
 from informed.query.manager import QueryManager
 
@@ -35,7 +35,7 @@ class QueryRunner:
         llm_client: LLMClient,
         update_callback: Callable[[Query], Awaitable[None]],
         weather_sources_config: WeatherSourcesConfig,
-        notification_service: NotificationService,
+        weather_alert_service: WeatherAlertService,
         monitor_done_callback: (
             Callable[[asyncio.Task, Query], None | Awaitable[None]] | None
         ) = None,
@@ -48,7 +48,7 @@ class QueryRunner:
         self._query_monitor_timeout = query_monitor_timeout
         self._llm_client = llm_client
         self._weather_sources_config = weather_sources_config
-        self._notification_service = notification_service
+        self._weather_alert_service = weather_alert_service
         self._update_callback = update_callback
         self._monitor_done_callback = monitor_done_callback
         self._agent_done_callback = agent_done_callback
@@ -93,14 +93,17 @@ class QueryRunner:
 
         return query.query_id
 
-    async def _start_query_agent(self, query_id: UUID) -> None:
+    async def _start_query_agent(
+        self, query_id: UUID, instructions: str | None = None
+    ) -> None:
         query_agent = QueryAgent(
             query_id=query_id,
             llm_client=self._llm_client,
             query_manager=self._query_manager,
             user_manager=self._user_manager,
             weather_sources_config=self._weather_sources_config,
-            notification_service=self._notification_service,
+            weather_alert_service=self._weather_alert_service,
+            instructions=instructions,
         )
 
         try:
@@ -174,12 +177,15 @@ class QueryRunner:
         self,
         query_text: str,
         chat_thread: ChatThread,
+        instructions: str | None = None,
     ) -> UUID:
         # trigger the query agent to start
         query_id = await self._create_query(query_text, chat_thread)
 
         # start the query agent in the background
-        agent_task = asyncio.create_task(self._start_query_agent(query_id))
+        agent_task = asyncio.create_task(
+            self._start_query_agent(query_id, instructions=instructions)
+        )
         agent_task.add_done_callback(
             lambda task: self._callback_with_query(
                 task, query_id, self._agent_done_callback
