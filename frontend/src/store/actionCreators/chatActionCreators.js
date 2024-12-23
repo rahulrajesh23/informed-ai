@@ -6,17 +6,17 @@ import { Constants } from "../../Config/Constants";
 const api_urls = Constants.apis
 const chatActions = actions.chat
 
-export const submitQuestion = (query) => dispatch => {
+export const submitQuestion = (message, responseType="text") => dispatch => {
     dispatch(chatActions.chatUserMessageRequest());
-    if(query) {
-        apiClient.post(api_urls.submit, { query })
+    if(message) {
+        apiClient.post(api_urls.submit, { message, requested_response_type: responseType })
             .then(response => {
                 const data = response.data;
                 if (data.error) {
                     dispatch(chatActions.chatUserMessageFailure(data.error));
                 } else {
                     const queryId = data && data.id || ''
-                    dispatch(chatActions.chatUserMessageSuccess({ query, queryId }));
+                    dispatch(chatActions.chatUserMessageSuccess({ message, queryId }));
                 }
             })
             .catch(error => {
@@ -25,7 +25,7 @@ export const submitQuestion = (query) => dispatch => {
     }
 }
 
-export const getQuestionAndFacts = () => dispatch => {
+export const getAssistantResponse = () => dispatch => {
     dispatch(chatActions.chatAgentPollRequest());
     apiClient.get(api_urls.generateResponse)
         .then(response => {

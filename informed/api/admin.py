@@ -63,7 +63,7 @@ async def create_notification(
         db_notification = WeatherNotification(
             zip_code=notification.zip_code,
             message=notification.message,
-            created_by=current_user.id,
+            created_by=current_user.user_id,
             created_at=datetime.now(),
             expires_at=notification.expires_at,
             cancelled_at=None,

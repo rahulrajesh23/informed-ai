@@ -87,3 +87,29 @@ svg {
     float: right;
     right: 30px;
 }
+
+.modeToggleContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modeToggle {
+    padding: 8px;
+    margin-right: 10px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    color: #9BBDD8;
+}
+
+.modeToggle:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}

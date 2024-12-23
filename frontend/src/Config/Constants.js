@@ -1,6 +1,6 @@
 export const Constants = {
     "apis" : {
-        "submit" : "api/v1/query/",
+        "submit" : "api/v1/chat/",
         "generateResponse" : "api/v1/query/latest",
         "register" : "api/v1/user/register",
         "login" : "api/v1/user/login",

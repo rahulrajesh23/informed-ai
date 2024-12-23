@@ -39,7 +39,7 @@ from informed.services.notification_service import NotificationService
 
 
 class WeatherResponse(BaseModel):
-    findings: list[str] = []
+    answer: str = ""
 
 
 class QueryAgent:
@@ -63,7 +63,7 @@ class QueryAgent:
         query = await self.query_manager.get_query(self.query_id)
         if query is None:
             raise ValueError(f"Query {self.query_id} not found")
-        query.state = QueryState.PROCESSING
+        query.state = QueryState.PENDING
         await self.query_manager.persist_query(query)
         await self._run(query)
 
@@ -111,7 +111,7 @@ class QueryAgent:
                 if isinstance(weather_response, WeatherResponse):
                     log.info(f"GPT Response: {weather_response.model_dump_json()}")
                     query.state = QueryState.COMPLETED
-                    query.findings = weather_response.findings
+                    query.answer = weather_response.answer
                     # TODO: Need to change after adding multiple sources
                     # Also remove this hardcoded source
                     query.sources = [QuerySource(source="https://api.weather.gov")]
@@ -120,16 +120,12 @@ class QueryAgent:
                         f"Unexpected response type for GPT response: {type(weather_response)}"
                     )
                     query.state = QueryState.FAILED
-                    query.findings = [
-                        "Sorry, I'm having some trouble answering your question. Please contact support"
-                    ]
+                    query.answer = "Sorry, I'm having some trouble answering your question. Please contact support"
 
             except Exception as e:
                 log.error(e)
                 query.state = QueryState.FAILED
-                query.findings = [
-                    "Sorry, I'm having some trouble answering your question. Please contact support"
-                ]
+                query.answer = "Sorry, I'm having some trouble answering your question. Please contact support"
 
             await self.query_manager.persist_query(query)
 

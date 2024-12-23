@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as chatActions from '../../store/actionCreators/chatActionCreators'
+import { TextFields, VoiceChat } from '@mui/icons-material';
 
 import { SubmitButton } from '../../Components/SubmitButton';
 import { MessagesContainer } from '../MessagesContainer/';
@@ -11,6 +12,7 @@ export function ChatScreen() {
     const messages = useSelector(state => state.chat.messages);
     const waitingForResponse = useSelector(state => state.chat.waitingForResponse);
     const isChatLoading = useSelector(state => state.chat.isAgentRequestLoading);
+    const [messageResponseType, setMessageResponseType] = useState('text');
     const [query, setQuery] = useState('');
     const [isInputFocused, setIsFocused] = useState(false)
     const questionInputRef = useRef(null);
@@ -42,7 +44,7 @@ export function ChatScreen() {
 
         if (waitingForResponse && !intervalID.current) {
             intervalID.current = setInterval(() => {
-                dispatch(chatActions.getQuestionAndFacts());
+                dispatch(chatActions.getAssistantResponse());
             }, 5000);
         }
         else if (!waitingForResponse && intervalID.current) {
@@ -68,10 +70,10 @@ export function ChatScreen() {
     const handleSendMessage = () => {
         const currentQuery = queryRef.current
 
-        // Check if we have a question and call log docuument paths
+        // Check if we have a question and call log document paths
         if (!currentQuery.trim()) return;
 
-        dispatch(chatActions.submitQuestion(currentQuery))
+        dispatch(chatActions.submitQuestion(currentQuery, messageResponseType))
 
         // Clearing the input fields
         setQuery('');
@@ -83,6 +85,13 @@ export function ChatScreen() {
 
             <div className={styles.chatActionContainer}>
                 <div className={styles.formContainer}>
+                    <button
+                        className={styles.modeToggle}
+                        onClick={() => setMessageResponseType(messageResponseType === 'text' ? 'voice' : 'text')}
+                        title={messageResponseType === 'voice' ? "Switch to text mode" : "Switch to voice mode"}
+                    >
+                        {messageResponseType === 'voice' ? <VoiceChat /> : <TextFields />}
+                    </button>
                     <div className={`${styles.questionContainer} ${isInputFocused && styles.focus || ''}`}>
                         <input
                             ref={questionInputRef}

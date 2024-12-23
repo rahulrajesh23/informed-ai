@@ -21,3 +21,9 @@
 .message.agent{
     color: #000000de;
 }
+
+.audioPlayer {
+    margin-top: 10px;
+    width: 100%;
+    max-width: 300px;
+}

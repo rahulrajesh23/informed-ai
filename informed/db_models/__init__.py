@@ -14,6 +14,15 @@ from .weather import WeatherData
 
 from .query import Query, QueryState, QuerySource
 
+from .chat import (
+    ChatThread,
+    Message,
+    MessageSource,
+    MessagePresentationType,
+    UserMessage,
+    AssistantMessage,
+)
+
 __all__ = [
     # Base and utility classes
     "SQLModel",
@@ -34,4 +43,11 @@ __all__ = [
     "QuerySource",
     # Notification-related models
     "WeatherNotification",
+    # Chat-related models
+    "ChatThread",
+    "Message",
+    "UserMessage",
+    "AssistantMessage",
+    "MessageSource",
+    "MessagePresentationType",
 ]
