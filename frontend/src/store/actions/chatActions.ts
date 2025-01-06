@@ -1,5 +1,5 @@
 import * as actionTypes from '../ActionTypes';
-import { ChatAction } from './types';
+import { ChatAction } from '../types';
 
 export const chatUserMessageRequest = (): ChatAction => ({
   type: actionTypes.CHAT_USER_MESSAGE_REQUEST

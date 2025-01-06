@@ -2,30 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Grid, TextField, Switch, FormControlLabel } from '@mui/material';
 import * as userActions from '../../store/actionCreators/userActionCreators';
-import { RootState } from '../../types';
+import { RootState } from '../../store/types';
+import { UserSettings } from '../../types';
 import { AppDispatch } from '../../store/store';
 
-interface UserSettingsState {
-  daily_updates: boolean;
-  daily_update_prompt: string;
-}
 
 interface UserSettingsProps {
-  onChange: (settings: UserSettingsState) => void;
+  onChange: (settings: UserSettings) => void;
 }
 
-const initialSettings: UserSettingsState = {
+const initialSettings: UserSettings = {
   daily_updates: false,
   daily_update_prompt: "",
 };
 
-export const UserSettings: React.FC<UserSettingsProps> = ({ onChange }) => {
+export const UserSettingsUpdate: React.FC<UserSettingsProps> = ({ onChange }) => {
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user.user);
   const isLoggedIn = useSelector((state: RootState) => state.user.loggedIn);
   const isLoading = useSelector((state: RootState) => state.user.isLoading);
   const currentSettings = useSelector((state: RootState) => state.user.user_settings);
-  const [settings, setSettings] = useState<UserSettingsState>(initialSettings);
+  const [settings, setSettings] = useState<UserSettings>(initialSettings);
 
   useEffect(() => {
     if (isLoggedIn && user) {
@@ -38,7 +35,7 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ onChange }) => {
 
   useEffect(() => {
     if (!isLoading && currentSettings && Object.keys(currentSettings).length > 0) {
-      setSettings(currentSettings as UserSettingsState);
+      setSettings(currentSettings as UserSettings);
     }
   }, [isLoading, currentSettings]);
 
@@ -83,4 +80,4 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ onChange }) => {
   );
 };
 
-export default UserSettings;
+export default UserSettingsUpdate;

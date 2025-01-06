@@ -2,14 +2,12 @@ import { Dispatch } from 'redux';
 import { actions } from '../actions';
 import apiClient from '../apiClient';
 import { Constants } from "../../Config/Constants";
-import { ChatAction } from '../actions/types';
-
+import { ChatAction } from '../types';
+import { Message, ResponseType } from '../../types';
 const api_urls = Constants.apis;
 const chatActions = actions.chat;
 
-export type ResponseType = 'text' | 'audio' | 'text_message';
-
-interface ChatMessage {
+interface ChatMessageInput {
   message: string;
   requested_response_type: ResponseType;
   chat_thread_id?: string | null;
@@ -22,7 +20,7 @@ interface ApiResponse<T> {
 
 interface ChatResponse {
   chat_thread_id: string;
-  messages: any[]; // TODO: Define proper message type
+  messages: Message[];
 }
 
 export const addUserMessage = (
@@ -34,7 +32,7 @@ export const addUserMessage = (
 
   if (message) {
     let apiUrl = api_urls.addUserMessage;
-    const payload: ChatMessage = {
+    const payload: ChatMessageInput = {
       message,
       requested_response_type: responseType
     };

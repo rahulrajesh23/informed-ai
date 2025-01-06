@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import * as chatActions from '../../store/actionCreators/chatActionCreators';
-import { RootState, Message } from '../../types';
+import { RootState } from '../../store/types';
 import { AppDispatch } from '../../store/store';
 import {
     ResponseTypeSelector,

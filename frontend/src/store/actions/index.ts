@@ -7,5 +7,3 @@ export const actions = {
   chat: chatActions,
   admin: adminActions
 } as const;
-
-export type { AdminAction, ChatAction, UserAction, User, WeatherAlert } from './types';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../types';
+import { RootState } from '../../store/types';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
@@ -12,14 +12,14 @@ import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
 import PersonIcon from '@mui/icons-material/Person';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { AppDispatch } from '../../store/store';
-
+import { UserDetails } from '../../types';
 import HealthUpdate from '../../Containers/HealthUpdate/HealthUpdate';
 import UserUpdate from '../../Containers/UserUpdate/UserUpdate';
 import DialogWrapper from '../DialogWrapper/DialogWrapper';
 import { useToastMessage } from '../../Containers/HOCLayout/ToastMessageContext';
 import styles from './Header.module.css';
 import * as userActions from '../../store/actionCreators/userActionCreators';
-import UserSettings from '../../Containers/UserSettings/UserSettings';
+import UserSettingsUpdate from '../../Containers/UserSettingsUpdate/UserSettingsUpdate';
 
 interface MenuItem {
   code: 'profile' | 'health_details' | 'settings';
@@ -113,7 +113,7 @@ export const Menu: React.FC = () => {
 
     switch(selectedMenuItem) {
       case "profile":
-        dispatch(userActions.setUserDetails({ payload: dialogFormState[selectedMenuItem] }));
+        dispatch(userActions.setUserDetails({ payload: dialogFormState[selectedMenuItem] as UserDetails }));
         break;
       case 'health_details':
         dispatch(userActions.setUserMedicalDetails({ payload: dialogFormState[selectedMenuItem] }));
@@ -181,7 +181,7 @@ export const Menu: React.FC = () => {
       >
         {selectedMenuItem === 'profile' && <UserUpdate onChange={handleDialogFormChange} />}
         {selectedMenuItem === 'health_details' && <HealthUpdate onChange={handleDialogFormChange} />}
-        {selectedMenuItem === 'settings' && <UserSettings onChange={handleDialogFormChange} />}
+        {selectedMenuItem === 'settings' && <UserSettingsUpdate onChange={handleDialogFormChange} />}
       </DialogWrapper>
     </div>
   );

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { IconButton, Menu, MenuItem, Avatar } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import * as userActions from '../../store/actionCreators/userActionCreators';
-import { RootState } from '../../types';
+import { RootState } from '../../store/types';
 import { AppDispatch } from '../../store/store';
 import LoginDialog from './LoginDialog';
 import styles from './UserMenu.module.css';

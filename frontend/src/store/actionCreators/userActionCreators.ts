@@ -2,29 +2,23 @@ import { Dispatch } from 'redux';
 import { actions } from '../actions';
 import apiClient from '../apiClient';
 import { Constants } from "../../Config/Constants";
-import { UserAction, User } from '../actions/types';
-
+import { UserAction } from '../types';
+import { User, UserDetails } from '../../types';
 const api_urls = Constants.apis;
 const userActions = actions.user;
 
-interface UserRegistration {
+interface UserRegistrationInput {
   email: string;
   first_name: string;
   last_name: string;
 }
 
-interface UserLogin {
+interface UserLoginInput {
   email: string;
   password: string;
 }
 
-interface UserDetails {
-  first_name?: string;
-  last_name?: string;
-  [key: string]: any;
-}
-
-interface NotificationUpdate {
+interface NotificationUpdateInput {
   notification_ids: string[];
   status: string;
 }
@@ -36,7 +30,7 @@ interface ApiResponse<T> {
   data?: T;
 }
 
-export const registerUser = ({ email, first_name, last_name }: UserRegistration) =>
+export const registerUser = ({ email, first_name, last_name }: UserRegistrationInput) =>
   (dispatch: Dispatch<UserAction>) => {
     dispatch(userActions.registerUserRequest());
 
@@ -58,7 +52,7 @@ export const registerUser = ({ email, first_name, last_name }: UserRegistration)
     }
 };
 
-export const login = ({ email, password }: UserLogin) =>
+export const login = ({ email, password }: UserLoginInput) =>
   (dispatch: Dispatch<UserAction>) => {
     dispatch(userActions.loginRequest());
 
@@ -214,7 +208,7 @@ export const fetchNotifications = () =>
       .catch(error => dispatch(userActions.fetchNotificationsFailure(error.message)));
 };
 
-export const updateNotificationStatus = ({ notification_ids, status }: NotificationUpdate) =>
+export const updateNotificationStatus = ({ notification_ids, status }: NotificationUpdateInput) =>
   (dispatch: Dispatch<UserAction>) => {
     dispatch(userActions.updateNotificationStatusRequest());
 

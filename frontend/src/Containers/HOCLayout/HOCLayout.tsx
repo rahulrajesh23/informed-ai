@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../types';
+import { RootState } from '../../store/types';
 import styles from './HOCLayout.module.css';
 import Header from '../../Components/Header/Header';
 import { ToastMessageProvider } from './ToastMessageContext';

@@ -6,7 +6,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import * as chatActions from '../../store/actionCreators/chatActionCreators';
 import * as userActions from '../../store/actionCreators/userActionCreators';
-import { RootState } from '../../types';
+import { RootState } from '../../store/types';
 import styles from './Notification.module.css';
 import { AppDispatch } from '../../store/store';
 

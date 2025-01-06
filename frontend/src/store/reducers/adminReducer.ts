@@ -1,6 +1,7 @@
 import * as actionTypes from '../ActionTypes';
-import { AdminState } from './types';
-import { AdminAction, WeatherAlert } from '../actions/types';
+import { AdminAction } from '../types';
+import { WeatherAlert } from '../../types';
+import { AdminState } from '../types';
 
 const initialState: AdminState = {
   weatherAlerts: [],

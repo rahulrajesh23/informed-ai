@@ -3,30 +3,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Grid, TextField, MenuItem, Button, IconButton, Typography } from '@mui/material';
 import { AddCircle, RemoveCircle } from '@mui/icons-material';
 import * as userActions from '../../store/actionCreators/userActionCreators';
-import { RootState } from '../../types';
+import { RootState } from '../../store/types';
+import { UserMedicalDetails, WeatherSensitivity, HealthCondition } from '../../types';
 import { AppDispatch } from '../../store/store';
 
-interface HealthCondition {
-  condition: string;
-  severity: string;
-  description: string;
-}
-
-interface WeatherSensitivity {
-  type: keyof typeof sensitivityTypes;
-  description: string;
-}
-
-interface HealthDetails {
-  blood_type: string;
-  height: string;
-  weight: string;
-  health_conditions: HealthCondition[];
-  weather_sensitivities: WeatherSensitivity[];
-}
-
 interface HealthUpdateProps {
-  onChange: (health: HealthDetails) => void;
+  onChange: (health: UserMedicalDetails) => void;
 }
 
 const bloodTypes = [
@@ -43,10 +25,10 @@ const sensitivityTypes = {
   'air_quality': 'Air Quality'
 } as const;
 
-const initialHealthDetails: HealthDetails = {
+const initialHealthDetails: UserMedicalDetails = {
   blood_type: '',
-  height: '',
-  weight: '',
+  height: null,
+  weight: null,
   health_conditions: [],
   weather_sensitivities: []
 };
@@ -57,7 +39,7 @@ export const HealthUpdate: React.FC<HealthUpdateProps> = ({ onChange }) => {
   const isLoggedIn = useSelector((state: RootState) => state.user.loggedIn);
   const isLoading = useSelector((state: RootState) => state.user.isLoading);
   const currentUserMedicalDetails = useSelector((state: RootState) => state.user.user_medical_details);
-  const [health, setHealth] = useState<HealthDetails>(initialHealthDetails);
+  const [health, setHealth] = useState<UserMedicalDetails>(initialHealthDetails);
 
   useEffect(() => {
     if(isLoggedIn && user && user.email) {
@@ -70,7 +52,7 @@ export const HealthUpdate: React.FC<HealthUpdateProps> = ({ onChange }) => {
 
   useEffect(() => {
     if(!isLoading && currentUserMedicalDetails && Object.keys(currentUserMedicalDetails).length > 0) {
-      setHealth(currentUserMedicalDetails as HealthDetails);
+      setHealth(currentUserMedicalDetails as UserMedicalDetails);
     }
   }, [isLoading, currentUserMedicalDetails]);
 

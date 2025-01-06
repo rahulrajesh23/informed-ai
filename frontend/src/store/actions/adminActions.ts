@@ -1,5 +1,6 @@
 import * as actionTypes from '../ActionTypes';
-import { AdminAction, WeatherAlert } from './types';
+import { AdminAction } from '../types';
+import { WeatherAlert } from '../../types';
 
 export const addWeatherAlertRequest = (): AdminAction => ({
   type: actionTypes.ADD_WEATHER_ALERT_REQUEST

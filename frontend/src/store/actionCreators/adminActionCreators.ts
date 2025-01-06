@@ -2,7 +2,8 @@ import { Dispatch } from 'redux';
 import { actions } from '../actions';
 import apiClient from '../apiClient';
 import { Constants } from "../../Config/Constants";
-import { AdminAction, WeatherAlert } from '../actions/types';
+import { AdminAction } from '../types';
+import { WeatherAlert } from '../../types';
 
 const api_urls = Constants.apis;
 const adminActions = actions.admin;

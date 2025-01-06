@@ -2,23 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Grid, TextField, MenuItem } from '@mui/material';
 import * as userActions from '../../store/actionCreators/userActionCreators';
-import { RootState } from '../../types';
+import { RootState } from '../../store/types';
+import { UserDetails } from '../../types';
 import { AppDispatch } from '../../store/store';
 
-interface UserDetails {
-  first_name: string;
-  last_name: string;
-  age: string;
-  address_line1: string;
-  address_line2: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  country: string;
-  phone_number: string;
-  ethnicity: string;
-  language: string;
-}
 
 interface UserUpdateProps {
   onChange: (details: UserDetails) => void;
@@ -59,7 +46,7 @@ const states = [
 const initialUserDetails: UserDetails = {
   first_name: "",
   last_name: "",
-  age: "",
+  age: null,
   address_line1: "",
   address_line2: "",
   city: "",
@@ -126,7 +113,7 @@ export const UserUpdate: React.FC<UserUpdateProps> = ({ onChange }) => {
           label="Age"
           name="age"
           type="number"
-          value={userDetails.age}
+          value={userDetails.age ?? ''}
           onChange={handleChange}
           fullWidth
         />

@@ -1,5 +1,6 @@
 import * as actionTypes from '../ActionTypes';
-import { User, UserAction } from './types';
+import { UserAction } from '../types';
+import { User } from '../../types';
 
 export const registerUserRequest = (): UserAction => ({
   type: actionTypes.REGISTER_USER_REQUEST

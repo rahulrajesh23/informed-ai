@@ -1,12 +1,9 @@
 import * as actionTypes from '../ActionTypes';
-import { ChatState } from './types';
-import { ChatAction, ChatMessage } from '../actions/types';
+import { ChatAction, ChatState } from '../types';
 
 const initialState: ChatState = {
-  user: null,
   error: null,
   isLoading: false,
-  isQuestionLoading: false,
   currentChatThreadId: null,
   waitingForResponse: false,
   messages: []

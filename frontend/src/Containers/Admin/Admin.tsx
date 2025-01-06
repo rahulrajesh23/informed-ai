@@ -3,9 +3,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import Select from 'react-select';
 import styles from './Admin.module.css';
 import * as adminActions from '../../store/actionCreators/adminActionCreators';
-import { RootState } from '../../types';
+import { RootState } from '../../store/types';
 import { AppDispatch } from '../../store/store';
-import { WeatherAlert } from '../../store/actions/types';
+import { WeatherAlert } from '../../types';
 
 interface NewWeatherAlert {
   message: string;
