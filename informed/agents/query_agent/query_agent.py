@@ -35,6 +35,7 @@ class QueryAgent:
         llm_client: LLMClient,
         weather_sources_config: WeatherSourcesConfig,
         weather_alert_service: WeatherAlertService,
+        previous_messages: list[str],
         instructions: str | None = None,
     ):
         self.query_id = query_id
@@ -44,6 +45,7 @@ class QueryAgent:
         self.weather_sources_config = weather_sources_config
         self.weather_alert_service = weather_alert_service
         self.instructions = instructions
+        self.previous_messages = previous_messages
 
     async def run(self) -> None:
         query = await self.query_manager.get_query(self.query_id)
@@ -70,15 +72,18 @@ class QueryAgent:
             )
             user_prompt = dedent(
                 f"""
-                <context>
+                <weather_context>
                 {context}
-                </context>
+                </weather_context>
                 <user>
                 {user_info}
                 </user>
-                <user_message>
+                <previous_messages>
+                    {"\n".join(self.previous_messages)}
+                </previous_messages>
+                <new_user_message>
                 {query.query}
-                </user_message>
+                </new_user_message>
                 """
             )
             if self.instructions:

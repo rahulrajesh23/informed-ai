@@ -40,5 +40,5 @@ db.sqlite3
 **/charts/*.tgz
 
 
-# # Ignore reference-cleric folder
-# /reference-cleric/
+# Terraform ignore
+terraform/.terraform/

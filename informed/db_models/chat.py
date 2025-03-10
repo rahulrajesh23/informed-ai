@@ -93,3 +93,10 @@ class ChatThread(SQLModel, table=True):
         ]
         pending_messages = [m for m in all_user_messages if m.is_pending()]
         return pending_messages
+
+    def get_chat_history(self) -> list[str]:
+        messages = [
+            f"{'user: ' if message.source == MessageSource.WEBAPP else 'agent: '} {message.content}"
+            for message in self.messages
+        ]
+        return messages

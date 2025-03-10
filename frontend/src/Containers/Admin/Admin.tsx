@@ -62,7 +62,7 @@ const WeatherAlertItem: React.FC<WeatherAlertItemProps> = ({ weatherAlert, onDel
             </span>
             <div className={styles.metadataGrid}>
               <span className={styles.metadataLabel}>ID:</span>
-              <span className={styles.metadataValue}>{weatherAlert.id}</span>
+              <span className={styles.metadataValue}>{weatherAlert.weatherAlertId}</span>
 
               <span className={styles.metadataLabel}>Created At:</span>
               <span className={styles.metadataValue}>{formatDate(weatherAlert.createdAt)}</span>
@@ -82,7 +82,7 @@ const WeatherAlertItem: React.FC<WeatherAlertItemProps> = ({ weatherAlert, onDel
       </div>
       {weatherAlert.isActive && (
         <button
-          onClick={() => onDelete(weatherAlert.id)}
+          onClick={() => onDelete(weatherAlert.weatherAlertId)}
           className={styles.deleteButton}
         >
           Delete
@@ -287,7 +287,7 @@ export const Admin: React.FC = () => {
       <div className={styles.notificationsList}>
         {weatherAlerts.map(weatherAlert => (
           <WeatherAlertItem
-            key={weatherAlert.id}
+            key={weatherAlert.weatherAlertId}
             weatherAlert={weatherAlert}
             onDelete={handleCancelWeatherAlert}
           />

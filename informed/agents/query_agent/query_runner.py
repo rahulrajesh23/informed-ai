@@ -93,7 +93,10 @@ class QueryRunner:
         return query.query_id
 
     async def _start_query_agent(
-        self, query_id: UUID, instructions: str | None = None
+        self,
+        query_id: UUID,
+        previous_messages: list[str],
+        instructions: str | None = None,
     ) -> None:
         query_agent = QueryAgent(
             query_id=query_id,
@@ -103,6 +106,7 @@ class QueryRunner:
             weather_sources_config=self._weather_sources_config,
             weather_alert_service=self._weather_alert_service,
             instructions=instructions,
+            previous_messages=previous_messages,
         )
 
         try:
@@ -181,9 +185,13 @@ class QueryRunner:
         # trigger the query agent to start
         query_id = await self._create_query(query_text, chat_thread)
 
+        previous_messages = chat_thread.get_chat_history()
+
         # start the query agent in the background
         agent_task = asyncio.create_task(
-            self._start_query_agent(query_id, instructions=instructions)
+            self._start_query_agent(
+                query_id, instructions=instructions, previous_messages=previous_messages
+            )
         )
         agent_task.add_done_callback(
             lambda task: self._callback_with_query(

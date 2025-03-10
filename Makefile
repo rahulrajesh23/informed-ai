@@ -42,7 +42,7 @@ check: ## 🚨 Run code quality tools.
 
 # Docker Image Building and Pushing
 .PHONY: build-ui build-core build-pgvector push-images
-GCP_PROJECT_ID := informed-ai-prod
+GCP_PROJECT_ID := informed-ai-prod-2
 
 build-ui:
 	@echo "📦 Building informed-ui for AMD64"
@@ -53,11 +53,15 @@ build-ui:
 
 build-core:
 	@echo "📦 Building informed-core for AMD64"
-	docker buildx create --use
+	docker buildx rm informed-builder || true
+	docker buildx create --name informed-builder --use
 	docker buildx build --platform linux/amd64 \
 		-t gcr.io/$(GCP_PROJECT_ID)/informed-core:latest \
 		--build-arg=APP_VERSION="latest" \
+		--pull \
+		--no-cache \
 		--push .
+	docker buildx rm informed-builder
 
 build-pgvector:
 	@echo "📦 Building informed-pgvector for AMD64"

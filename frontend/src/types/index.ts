@@ -64,7 +64,7 @@ export interface Message {
 }
 
 export interface WeatherAlert {
-    id: string;
+    weatherAlertId: string;
     zipCode: string;
     message: string;
     createdBy: string;

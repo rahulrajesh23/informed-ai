@@ -1,5 +1,5 @@
 # Stage 1: Build Stage
-FROM python:3.12-slim-bullseye AS builder
+FROM python:3.12-slim-bookworm AS builder
 RUN pip install poetry==1.4.2
 
 # Install necessary tools for AWS CLI installation, gnupg for apt-key, and build-essential for make
@@ -7,8 +7,7 @@ RUN apt-get update && \
     apt-get install -y curl unzip gnupg build-essential libgeos-dev && \
     # Clean up the cache and unnecessary packages to keep the image size down
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-key update
+    rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -26,7 +25,7 @@ COPY pyproject.toml poetry.lock ./
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR poetry install --without dev --no-root
 
 # Stage 2: Final Image
-FROM python:3.12-slim-bullseye
+FROM python:3.12-slim-bookworm
 
 RUN apt-get update && \
          apt-get install -y procps

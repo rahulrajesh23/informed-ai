@@ -1,18 +1,3 @@
-# FROM node:16 as build
-# WORKDIR /app
-# COPY package.json package-lock.json ./
-# RUN npm install
-# COPY . .
-# RUN npm run build
-
-# # Production stage
-# FROM nginx:alpine
-# COPY --from=build /app/build /usr/share/nginx/html
-# EXPOSE 80
-# CMD ["nginx", "-g", "daemon off;"]
-
-
-
 FROM node:18 AS builder
 
 # Set the working directory
@@ -37,7 +22,7 @@ RUN NODE_ENV=production npm run build
 FROM nginx:stable-alpine3.19-slim AS server
 
 # Copy the build output to replace the default nginx contents.
-COPY --from=builder /app/build /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80 to the Docker host so we can access it
